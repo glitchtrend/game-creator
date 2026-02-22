@@ -85,6 +85,24 @@ mechanics that technically exist but are too weak to matter.
 3. **Win condition**: Test that active player input leads to a win. Provide rapid
    input throughout the round and assert the outcome is a win.
 
+### Step 3c: Entity interaction audit
+
+Audit collision and interaction logic for asymmetries that would confuse a
+first-time player.
+
+If `design-brief.md` has an "Entity Interactions" section, use it as the
+checklist. Otherwise, audit `GameScene.js` directly:
+
+1. Find all collision handlers, overlap checks, or distance-based interactions
+2. Map which entities interact with which others
+3. Flag any visible moving entity that interacts with one side (player OR
+   opponent) but not the other — add a `// QA FLAG: asymmetric interaction`
+   comment in the test file noting the entity name and the asymmetry
+
+This is a flag, not a hard fail. Some asymmetries are intentional (e.g.,
+hazards that only affect the player). The flag ensures the asymmetry is a
+conscious design choice, not an oversight.
+
 ### Step 4: Run and verify
 
 1. Run `npx playwright test` to execute all tests
