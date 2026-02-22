@@ -382,6 +382,85 @@ test('page has no accessibility violations', async ({ gamePage }) => {
 });
 ```
 
+### 7. Design Intent
+
+Tests that catch mechanics which technically exist but are too weak to affect gameplay. These use values from `Constants.js` to set meaningful thresholds instead of trivial `> 0` checks.
+
+**Lose condition** — verify the player can actually lose:
+
+```js
+test('player loses when providing no input', async ({ gamePage }) => {
+  // Start the game
+  await gamePage.keyboard.press('Space');
+  await gamePage.waitForFunction(() => window.__GAME_STATE__.started);
+
+  // Wait for the round to end with no player input
+  await gamePage.waitForFunction(
+    () => window.__GAME_STATE__.gameOver,
+    null,
+    { timeout: 45000 }
+  );
+
+  // The outcome should be a loss, not a win
+  const result = await gamePage.evaluate(() => window.__GAME_STATE__.result);
+  expect(result).toBe('lose');
+});
+```
+
+**Opponent/AI pressure** — verify AI mechanics produce substantial state changes:
+
+```js
+test('opponent reaches 25% within half the round duration', async ({ gamePage }) => {
+  await gamePage.keyboard.press('Space');
+  await gamePage.waitForFunction(() => window.__GAME_STATE__.started);
+
+  // Use Constants to determine half the round duration and the max value
+  const { halfDuration, maxValue } = await gamePage.evaluate(() => {
+    const C = window.__GAME__.scene.getScene('GameScene').constructor;
+    // Adapt these to the actual constant names
+    return {
+      halfDuration: window.Constants?.ROUND_DURATION_MS / 2 || 15000,
+      maxValue: window.Constants?.MAX_VALUATION || 100,
+    };
+  });
+
+  await gamePage.waitForTimeout(halfDuration);
+
+  const opponentValue = await gamePage.evaluate(() => {
+    return window.__GAME_STATE__.opponentScore; // adapt to actual field
+  });
+
+  expect(opponentValue).toBeGreaterThanOrEqual(maxValue * 0.25);
+});
+```
+
+**Win condition** — verify active input leads to a win:
+
+```js
+test('player wins with active input', async ({ gamePage }) => {
+  await gamePage.keyboard.press('Space');
+  await gamePage.waitForFunction(() => window.__GAME_STATE__.started);
+
+  // Provide rapid input throughout the round
+  const inputInterval = setInterval(async () => {
+    await gamePage.keyboard.press('Space').catch(() => {});
+  }, 100);
+
+  await gamePage.waitForFunction(
+    () => window.__GAME_STATE__.gameOver,
+    null,
+    { timeout: 45000 }
+  );
+
+  clearInterval(inputInterval);
+
+  const result = await gamePage.evaluate(() => window.__GAME_STATE__.result);
+  expect(result).toBe('win');
+});
+```
+
+Adapt field names (`result`, `opponentScore`, constant names) to match the specific game's GameState and Constants. The patterns above are templates — read the actual game code to determine the correct fields and thresholds.
+
 ## Deterministic Testing
 
 For reproducible tests, seed the game's RNG before page load:
