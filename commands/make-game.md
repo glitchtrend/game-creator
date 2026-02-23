@@ -32,7 +32,7 @@ Build a complete browser game from scratch, step by step. This command walks you
 **What stays in the main thread:**
 - Step 0: Parse arguments, create todo list
 - Step 1 (infrastructure only): Copy template, npm install, playwright install, start dev server
-- Verification protocol runs (build + runtime + visual review + autofix)
+- Verification protocol orchestration (launch QA subagent, read text result, launch autofix if needed)
 - Step 4 (deploy): Interactive auth requires user back-and-forth
 
 **What goes to subagents** (via `Task` tool):
@@ -309,7 +309,7 @@ Launch a `Task` subagent with these instructions:
 >
 > Do NOT start a dev server or run builds — the orchestrator handles that.
 
-**After subagent returns**, run the Verification Protocol (Phase 1 + Phase 2).
+**After subagent returns**, run the Verification Protocol.
 
 **Create `progress.md`** at the game's project root. Read the game's actual source files to populate it accurately:
 - Read `src/core/EventBus.js` for the event list
