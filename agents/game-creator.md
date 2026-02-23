@@ -40,7 +40,7 @@ The agent expects:
 **What stays in the main thread:**
 - Step 0: Parse input, create todo list
 - Step 1 (infrastructure only): Copy template, npm install, playwright install, start dev server
-- Verification protocol runs (build + runtime + visual review + autofix)
+- Verification protocol orchestration (launch QA subagent, read text result, launch autofix if needed)
 
 **What goes to subagents** (via `Task` tool):
 - Step 1 (game implementation): Transform template into the actual game concept
