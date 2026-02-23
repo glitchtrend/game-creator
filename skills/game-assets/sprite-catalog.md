@@ -85,6 +85,29 @@ export const PERSONALITY_FRAMES = [PERSONALITY_IDLE];
 
 Customize per personality: change hair color/style (index 4), add glasses (index 9), adjust facial hair. The head rows (0-28) are where all recognition lives — spend your detail budget there.
 
+### Character Feature Reference
+
+Physical descriptions for commonly-appearing tech figures. Use these to customize the personality template — every field maps to sprite design decisions.
+
+| Person | Hair | Face | Clothing | Palette accent | Key feature |
+|--------|------|------|----------|----------------|-------------|
+| Sam Altman | Short sandy/light brown, side-parted | Clean-shaven, round face | Gray hoodie | `0xC4A882` (sandy) | The hoodie + round face combo |
+| Dario Amodei | Dark curly hair, voluminous | Beard/stubble, rectangular glasses | Blazer over casual shirt | `0x3D2B1F` (dark brown) | Curly hair + glasses + beard |
+| Elon Musk | Receding hairline, short | Broad face, clean-shaven | Black t-shirt | `0x2A2A2A` (charcoal) | Receding hairline + broad jaw |
+| Mark Zuckerberg | Short curly brown hair | Clean-shaven, narrow face | Simple gray/blue t-shirt | `0x4267B2` (Facebook blue) | Curly top + blank expression |
+| Satya Nadella | Bald | Glasses, warm smile | Dark suit and tie | `0x00A4EF` (Microsoft blue) | Bald + glasses |
+| Sundar Pichai | Dark hair, neatly styled | Clean-shaven, slim face | Casual button-down shirt | `0x4285F4` (Google blue) | Slim face + neat dark hair |
+| Jensen Huang | Dark hair, swept back | Clean-shaven, square jaw | Black leather jacket (signature) | `0x76B900` (NVIDIA green) | Leather jacket is instant recognition |
+| Andrej Karpathy | Dark wavy hair | Stubble, friendly face | Casual (t-shirt/hoodie) | `0x5C5C5C` (neutral gray) | Wavy hair + stubble |
+
+When building a personality sprite for any of these people:
+1. Start from `PERSONALITY_IDLE` template
+2. Set hair color (index 4) to their palette accent
+3. Add/remove glasses (index 9) per the table
+4. Adjust hair shape in rows 0-7 (curly = wider irregular edges, receding = narrower top rows, bald = skip hair rows)
+5. Add facial hair in rows 17-19 if applicable (beard = fill chin area with dark index)
+6. Set shirt color (index 6) to match their typical clothing
+
 ## Humanoid (Player, NPC, Warrior)
 
 Key features: Head (2-3px wide), body (3-4px wide), legs (2 columns). Arms optional at 16x16. Distinguish characters via hair/hat color and body color.

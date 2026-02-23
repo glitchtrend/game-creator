@@ -274,6 +274,9 @@ Launch a `Task` subagent with these instructions:
 > - Named opponents/NPCs must have visual presence on screen — never text-only. At minimum use distinct colored shapes that suggest the brand. Better: simple character forms with recognizable features.
 > - Collectibles and hazards must be visually self-explanatory. Avoid abstract concepts ("imagination blocks", "creativity sparks"). Use concrete objects players instantly recognize (polaroids, trophies, lightning bolts, money bags, etc.).
 > - Think: "Could someone screenshot this and immediately know what the game is about?"
+> - **NEVER** use a single letter (C, G, O) as a character's visual identity
+> - **NEVER** differentiate two characters only by fill color — they must have distinct silhouettes and features
+> - When a company is featured (OpenAI, Anthropic, xAI, etc.), use the CEO as the character: Altman for OpenAI, Amodei for Anthropic, Musk for xAI, Zuckerberg for Meta, Nadella for Microsoft, Pichai for Google, Huang for NVIDIA
 > - Add entrance sequence in `create()`: player starts off-screen, tweens into position with `Bounce.easeOut`, landing shake + particle burst
 > - Add combo tracking to GameState: `combo` (current streak, resets on miss), `bestCombo` (session high), both reset in `reset()`
 > - Ensure restart is clean — test mentally that 3 restarts in a row would work identically
@@ -339,9 +342,13 @@ Launch a `Task` subagent with these instructions:
 > For each visible entity (enemies, projectiles, collectibles, environmental objects):
 > - **Name**: what it is
 > - **Visual identity**: what it should LOOK like and why (reference real logos, people, objects — not abstract concepts)
+> - **Distinguishing feature**: the ONE exaggerated feature visible at thumbnail size (e.g., "curly dark hair + glasses" for Amodei, "leather jacket" for Jensen Huang)
+> - **Real image asset**: logo URL to download, or "pixel art" if no real image applies
 > - **Behavior**: what it does (moves, falls, spawns, etc.)
 > - **Player interaction**: how the player interacts with it (dodge, collect, tap, block, or "none — background/decoration")
 > - **AI/opponent interaction**: how the opponent interacts with it, if applicable
+>
+> For named people: describe hair, glasses, facial hair, clothing. For companies: specify logo to download. NEVER use a letter or text label as visual identity.
 > ```
 >
 > Do NOT start a dev server or run builds — the orchestrator handles that.
@@ -425,6 +432,14 @@ Launch a `Task` subagent with these instructions:
 > - For brands/products: incorporate logo shapes, brand colors, and distinctive visual elements into the sprite design.
 > - For game objects: make them instantly recognizable. A "power-up" should look like the specific thing it represents in the theme, not a generic star or diamond.
 > - Opponents should be visually distinct from each other — different colors, shapes, sizes, and personality. A player should tell them apart at a glance.
+>
+> **Self-audit before returning** — check every personality sprite against these:
+> - Does each sprite have distinct hair (not a solid-color dome)?
+> - Does each sprite have facial features beyond just eyes (glasses, facial hair, or clothing details if applicable)?
+> - Would two character sprites look different if rendered in the same color?
+> - Is any `scene.add.text()` being used as the primary identifier? If so, remove it and add physical features instead.
+> - Does the head region (rows 0-28) use at least 4 distinct palette indices?
+> - For brand entities: was a real logo downloaded and loaded? If not, why?
 >
 > **After completing your work**, append a `## Step 1.5: Assets` section to `progress.md` with: palette used, sprites created, any dimension changes to entities.
 >
