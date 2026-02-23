@@ -156,3 +156,93 @@ export const UI = {
 export const TRANSITION = {
   FADE_DURATION: 350,
 };
+
+// --- Particles ---
+
+export const PARTICLES = {
+  // Engine trail (behind ship)
+  ENGINE_TRAIL: {
+    COUNT: 3,                    // particles per frame
+    MIN_SIZE: 2 * PX,
+    MAX_SIZE: 4 * PX,
+    SPEED: 80 * PX,             // downward drift speed
+    SPREAD: SHIP.WIDTH * 0.2,   // horizontal spread from center
+    LIFETIME: 400,              // ms before particle fades
+    COLORS: [0xff6622, 0xffcc00, 0xff8844, 0xf5d742],
+  },
+  // Asteroid debris (on passing bottom or destruction)
+  DEBRIS: {
+    COUNT: 6,
+    MIN_SIZE: 2 * PX,
+    MAX_SIZE: 5 * PX,
+    SPEED: 100 * PX,
+    LIFETIME: 500,
+    COLORS: [0x8b7355, 0x6b5b3e, 0xa0937a, 0x4a4a6a],
+  },
+  // Death explosion burst
+  DEATH_BURST: {
+    COUNT: 16,
+    MIN_SIZE: 3 * PX,
+    MAX_SIZE: 7 * PX,
+    SPEED: 150 * PX,
+    LIFETIME: 600,
+    COLORS: [0xff6622, 0xffcc00, 0xff8844, 0xe94560, 0xffffff],
+  },
+  // Score popup sparkle
+  SCORE_SPARKLE: {
+    COUNT: 5,
+    MIN_SIZE: 1 * PX,
+    MAX_SIZE: 3 * PX,
+    SPEED: 40 * PX,
+    LIFETIME: 400,
+    COLORS: [0xffd700, 0xffcc00, 0xf5d742],
+  },
+};
+
+// --- Visual Effects ---
+
+export const EFFECTS = {
+  // Camera shake on collision
+  SHAKE_INTENSITY: 0.02,
+  SHAKE_DURATION: 300,
+  // Screen flash on death (white)
+  FLASH_DURATION: 250,
+  FLASH_COLOR: { r: 255, g: 255, b: 255 },
+  // Slow-mo death sequence
+  SLOWMO_SCALE: 0.3,           // time scale during slow-mo
+  SLOWMO_DURATION: 500,        // how long slow-mo lasts (ms real time)
+  DEATH_DELAY: 800,            // total delay before scene transition (ms)
+  // Floating score text
+  FLOAT_TEXT: {
+    OFFSET_Y: -20 * PX,
+    RISE: 50 * PX,
+    DURATION: 700,
+    FONT_SIZE_RATIO: 0.04,     // relative to GAME.HEIGHT
+    COLOR: '#ffd700',
+    STROKE: '#000000',
+    STROKE_THICKNESS: 3,
+  },
+  // Ship tilt
+  SHIP_TILT: {
+    MAX_ANGLE: 0.2,            // max rotation in radians (~11 degrees)
+    LERP_SPEED: 8,             // interpolation speed (higher = snappier)
+  },
+};
+
+// --- Game Over UI animations ---
+
+export const GAMEOVER_UI = {
+  TITLE_DROP_DURATION: 600,    // title entrance duration
+  TITLE_DROP_EASE: 'Bounce.easeOut',
+  SCORE_COUNTUP_DURATION: 800, // score count-up duration
+  SCORE_COUNTUP_DELAY: 300,    // delay before count-up starts
+  BTN_ENTRANCE_DELAY: 600,     // delay before button slides in
+  BTN_ENTRANCE_DURATION: 400,
+  BTN_GLOW_COLOR: 0x857dff,   // glow color for button hover
+  BTN_GLOW_ALPHA: 0.3,
+  BTN_GLOW_RADIUS: 8 * PX,    // glow spread
+  // Floating background particles on game over screen
+  BG_PARTICLE_COUNT: 20,
+  BG_PARTICLE_SPEED: 15 * PX,
+  BG_PARTICLE_COLORS: [0x6c63ff, 0x857dff, 0x44aaff, 0xffd700],
+};

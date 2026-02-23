@@ -8,9 +8,13 @@ export class ScoreSystem {
     eventBus.on(Events.ASTEROID_PASSED, this.onAsteroidPassed);
   }
 
-  onAsteroidPassed() {
+  onAsteroidPassed(data) {
     gameState.addScore(SCORING.POINTS_PER_DODGE);
-    eventBus.emit(Events.SCORE_CHANGED, { score: gameState.score });
+    eventBus.emit(Events.SCORE_CHANGED, {
+      score: gameState.score,
+      x: data?.x,
+      y: data?.y,
+    });
   }
 
   destroy() {
