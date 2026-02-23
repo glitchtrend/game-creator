@@ -17,6 +17,27 @@ A scaffolded game is functional but visually flat. A designed game has:
 - **Satisfying feedback**: Every action has a visible (and audible) reaction
 - **Smooth transitions**: Scenes flow into each other, not jump-cut
 
+## Viral Spectacle Philosophy
+
+The design target is not just the player — it's a **viewer scrolling a social feed with sound off**. Games are captured as 13-second silent video clips. Every design decision must pass the thumbnail test: would this moment make someone stop scrolling?
+
+**Five principles:**
+
+1. **Every frame must have motion** — No static moments. Background particles, color shifts, trails, bobbing idle animations. A paused screenshot should still look dynamic.
+2. **Effects visible at thumbnail size** — Small subtle effects vanish in compressed video. Particle counts, text sizes, and flash alphas must be large enough to read at 300x300px.
+3. **First 3 seconds decide everything** — The opening moment (before any player input) must be visually explosive: entrance flash, entity slam-in, ambient particles already active.
+4. **Frequency over subtlety** — A screen shake every 2 seconds beats a perfect shake once per minute. More effects at moderate intensity > fewer effects at high intensity.
+5. **Silent communication** — Text slams ("COMBO!", "ON FIRE!"), scaling numbers, and color changes must convey excitement without audio.
+
+### Opening Moment
+
+These elements fire in `create()` before any player input:
+
+- **Entrance flash** — `cameras.main.flash(300)` on scene start
+- **Entity slam-in** — Player drops from above with `Bounce.easeOut`, landing shake + particle burst
+- **Ambient motion** — Background particles, color cycling, or parallax drift active from frame 1
+- **Optional flavor text** — Short text like "GO!", "DODGE!", or "FIGHT!" that scales in and fades. Use only when it naturally fits the game's vibe — not every game needs it
+
 ## Design Process
 
 When invoked, follow this process:
@@ -45,8 +66,11 @@ Evaluate these areas and score each 1-5:
 | **Game Feel / Juice** | Screen shake on impact, flash on hit, haptic feedback |
 | **Game Over** | Polished or placeholder? Restart button feels clickable? Clear call to action? Score display with animation? |
 | **Character Prominence** | Is the main character the visually dominant element? Does it occupy 30%+ of screen height? Larger than all other entities? |
+| **First Impression / Viral Appeal** | Does the game explode visually in the first 3 seconds? Entrance animation, ambient particles active, background in motion? Would a 13-second silent clip stop a scroller? |
 
 Present the scores as a table, then list the top improvements ranked by visual impact.
+
+**Mandatory threshold**: Any area scoring below 4 MUST be improved before the design pass is complete. **First Impression / Viral Appeal is the most critical category** — it directly determines whether the promo clip converts viewers.
 
 ### Step 3: Implement improvements
 
@@ -167,15 +191,16 @@ eventBus.on(Events.SCREEN_SHAKE, ({ intensity, duration }) => {
 // On score change — floating "+1" text near the action (score HUD is handled by Play.fun widget)
 eventBus.on(Events.SCORE_CHANGED, ({ score }) => {
   const floater = scene.add.text(playerX + 30, playerY - 20, '+1', {
-    fontSize: '20px', fontFamily: 'Arial Black',
-    color: '#ffff00', stroke: '#000000', strokeThickness: 3,
-  }).setOrigin(0.5);
+    fontSize: '28px', fontFamily: 'Arial Black',
+    color: '#ffff00', stroke: '#000000', strokeThickness: 4,
+  }).setOrigin(0.5).setScale(1.8);
   scene.tweens.add({
     targets: floater,
-    y: floater.y - 40,
+    y: floater.y - 50,
     alpha: 0,
+    scale: 0.8,
     duration: 600,
-    ease: 'Quad.easeOut',
+    ease: 'Elastic.easeOut',
     onComplete: () => floater.destroy(),
   });
 });
@@ -234,6 +259,8 @@ function emitBurst(scene, x, y, count, color) {
 }
 ```
 
+**Particle count guidance**: Use 12-30 particles per burst. Never fewer than 10 — small counts look broken in compressed video. Scale up for bigger moments (streaks: 30-40, game over: 40+).
+
 ### Scene Transitions
 
 #### Fade Transition
@@ -277,6 +304,139 @@ for (let x = 0; x < width; x += 12) {
 // Dirt line
 ground.lineStyle(2, GROUND_CONFIG.darkColor, 1);
 ground.lineBetween(0, groundY, width, groundY);
+```
+
+### Spectacle Effects (Viral-Critical)
+
+These effects are the highest priority for promo clip impact. Wire them to `SPECTACLE_*` EventBus events.
+
+#### Combo Text with Scaling
+```js
+// Wire to SPECTACLE_COMBO — grows with consecutive hits
+eventBus.on(Events.SPECTACLE_COMBO, ({ combo }) => {
+  const size = Math.min(32 + combo * 4, 72);
+  const text = scene.add.text(GAME.WIDTH / 2, GAME.HEIGHT * 0.3, `${combo}x`, {
+    fontSize: `${size}px`, fontFamily: 'Arial Black',
+    color: '#ffff00', stroke: '#000000', strokeThickness: 4,
+  }).setOrigin(0.5).setScale(1.8).setDepth(400);
+  scene.tweens.add({
+    targets: text,
+    scale: 1, y: text.y - 30, alpha: 0,
+    duration: 700, ease: 'Elastic.easeOut',
+    onComplete: () => text.destroy(),
+  });
+});
+```
+
+#### Hit Freeze Frame
+```js
+// 60ms physics pause on destruction — makes hits feel powerful
+function hitFreeze(scene) {
+  scene.physics.world.pause();
+  scene.time.delayedCall(60, () => scene.physics.world.resume());
+}
+```
+
+#### Rainbow / Color Cycling Background
+```js
+// Hue shifts over time in update() — ambient visual energy
+let bgHue = 0;
+function updateBgHue(delta, bgGraphics) {
+  bgHue = (bgHue + delta * 0.02) % 360;
+  const color = Phaser.Display.Color.HSLToColor(bgHue / 360, 0.6, 0.15);
+  bgGraphics.clear();
+  bgGraphics.fillStyle(color.color, 1);
+  bgGraphics.fillRect(0, 0, GAME.WIDTH, GAME.HEIGHT);
+}
+```
+
+#### Pulsing Background on Score
+```js
+// Additive blend overlay that flashes on score events
+const scorePulse = scene.add.rectangle(
+  GAME.WIDTH / 2, GAME.HEIGHT / 2, GAME.WIDTH, GAME.HEIGHT,
+  PALETTE.ACCENT, 0,
+).setDepth(-50).setBlendMode(Phaser.BlendModes.ADD);
+
+eventBus.on(Events.SCORE_CHANGED, () => {
+  scorePulse.setAlpha(0.15);
+  scene.tweens.add({
+    targets: scorePulse, alpha: 0, duration: 300, ease: 'Quad.easeOut',
+  });
+});
+```
+
+#### Entity Entrance Animations
+```js
+// Pop-in: entity appears from scale 0
+function popIn(scene, target, delay = 0) {
+  target.setScale(0);
+  scene.tweens.add({
+    targets: target, scale: 1, duration: 300, delay, ease: 'Back.easeOut',
+  });
+}
+
+// Slam-in: entity drops from above with bounce
+function slamIn(scene, target, targetY, delay = 0) {
+  target.y = -50;
+  scene.tweens.add({
+    targets: target, y: targetY, duration: 350, delay, ease: 'Bounce.easeOut',
+    onComplete: () => scene.cameras.main.shake(80, 0.006),
+  });
+}
+```
+
+#### Persistent Player Trail
+```js
+// Continuous particle spawn behind the player
+const trail = scene.add.particles(0, 0, 'particle', {
+  follow: player,
+  scale: { start: 0.6, end: 0 },
+  alpha: { start: 0.5, end: 0 },
+  speed: { min: 5, max: 15 },
+  lifespan: 400,
+  frequency: 30,
+  blendMode: 'ADD',
+  tint: PALETTE.ACCENT,
+});
+```
+
+#### Streak Milestone Announcements
+```js
+// Full-screen text slam at milestones (5x, 10x, 25x)
+eventBus.on(Events.SPECTACLE_STREAK, ({ streak }) => {
+  const labels = { 5: 'ON FIRE!', 10: 'UNSTOPPABLE!', 25: 'LEGENDARY!' };
+  const label = labels[streak] || `${streak}x STREAK`;
+  const text = scene.add.text(GAME.WIDTH / 2, GAME.HEIGHT / 2, label, {
+    fontSize: '80px', fontFamily: 'Arial Black',
+    color: '#ffffff', stroke: '#000000', strokeThickness: 8,
+  }).setOrigin(0.5).setScale(3).setAlpha(0).setDepth(500);
+  scene.tweens.add({
+    targets: text, scale: 1, alpha: 1, duration: 300,
+    ease: 'Back.easeOut', hold: 400, yoyo: true,
+    onComplete: () => text.destroy(),
+  });
+  scene.cameras.main.shake(200, 0.02);
+  emitBurst(scene, GAME.WIDTH / 2, GAME.HEIGHT / 2, 40, PALETTE.HIGHLIGHT);
+});
+```
+
+#### SPECTACLE Constants Example
+```js
+// In Constants.js — spectacle tuning values
+export const SPECTACLE = {
+  ENTRANCE_FLASH_DURATION: 300,
+  ENTRANCE_SLAM_DURATION: 400,
+  HIT_FREEZE_MS: 60,
+  COMBO_TEXT_BASE_SIZE: 32,
+  COMBO_TEXT_MAX_SIZE: 72,
+  COMBO_TEXT_GROWTH: 4,
+  STREAK_MILESTONES: [5, 10, 25, 50],
+  PARTICLE_BURST_MIN: 12,
+  PARTICLE_BURST_MAX: 30,
+  SCORE_PULSE_ALPHA: 0.15,
+  BG_HUE_SPEED: 0.02,
+};
 ```
 
 ## When NOT to Change
