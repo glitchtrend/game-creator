@@ -11,12 +11,21 @@ You are an expert pixel art game artist. You create recognizable, stylish charac
 
 Procedural circles and rectangles are fast to scaffold, but players can't tell a bat from a zombie. Pixel art sprites — even at 16x16 — give every entity a recognizable identity. The key insight: **pixel art IS code**. A 16x16 sprite is just a 2D array of palette indices, rendered to a Canvas texture at runtime.
 
-This approach:
-- **Zero external dependencies** — no image files, no downloads, no broken URLs
-- **Legitimate art style** — 16x16 and 32x32 pixel art is a real aesthetic (Celeste, Shovel Knight, Vampire Survivors itself)
-- **Unique per game** — your agent generates custom sprites matching each game's theme
-- **Drops into existing architecture** — replaces `fillCircle()` + `generateTexture()` in entity constructors
-- **Animation support** — multiple frames as separate matrices, wired to Phaser anims
+### Asset Tiers
+
+| Tier | Use for | Source |
+|------|---------|--------|
+| **Real images** (logos, photos) | Company logos, brand marks when game features a named company | Download to `public/assets/` with pixel art fallback |
+| **Meme/reference images** | Source tweet `image_url` — embed as background, splash, or texture when it enhances thematic identity | Download to `public/assets/` |
+| **Pixel art** (default) | Characters, items, game objects, enemies | Code-only 2D arrays rendered at runtime |
+
+**Pixel art** is the default for characters, items, and game objects — it's a legitimate art style (Celeste, Shovel Knight, Vampire Survivors) and generates unique per-game assets.
+
+**Real logos** are preferred for brand identity. When a game features OpenAI, Anthropic, Google, etc., download their logo and use it. A pixel art approximation of a logo is worse than the real thing.
+
+**Meme images** from the source tweet (`image_url` in thread.json) should be downloaded and incorporated when they enhance visual identity — as a background element, splash screen, or texture reference.
+
+All tiers share the same fallback pattern: if an external asset fails to load, fall back to pixel art.
 
 ## Pixel Art Rendering System
 
@@ -259,6 +268,29 @@ export const PERSONALITY_FRAMES = [PERSONALITY_IDLE];
 ```
 
 Customize per personality: change hair color/style (index 4), add glasses (index 9), adjust facial hair. The head rows (0-28) are where all recognition lives — spend your detail budget there.
+
+#### Character Feature Reference
+
+Physical descriptions for commonly-appearing tech figures. Use these to customize the personality template — every field maps to sprite design decisions.
+
+| Person | Hair | Face | Clothing | Palette accent | Key feature |
+|--------|------|------|----------|----------------|-------------|
+| Sam Altman | Short sandy/light brown, side-parted | Clean-shaven, round face | Gray hoodie | `0xC4A882` (sandy) | The hoodie + round face combo |
+| Dario Amodei | Dark curly hair, voluminous | Beard/stubble, rectangular glasses | Blazer over casual shirt | `0x3D2B1F` (dark brown) | Curly hair + glasses + beard |
+| Elon Musk | Receding hairline, short | Broad face, clean-shaven | Black t-shirt | `0x2A2A2A` (charcoal) | Receding hairline + broad jaw |
+| Mark Zuckerberg | Short curly brown hair | Clean-shaven, narrow face | Simple gray/blue t-shirt | `0x4267B2` (Facebook blue) | Curly top + blank expression |
+| Satya Nadella | Bald | Glasses, warm smile | Dark suit and tie | `0x00A4EF` (Microsoft blue) | Bald + glasses |
+| Sundar Pichai | Dark hair, neatly styled | Clean-shaven, slim face | Casual button-down shirt | `0x4285F4` (Google blue) | Slim face + neat dark hair |
+| Jensen Huang | Dark hair, swept back | Clean-shaven, square jaw | Black leather jacket (signature) | `0x76B900` (NVIDIA green) | Leather jacket is instant recognition |
+| Andrej Karpathy | Dark wavy hair | Stubble, friendly face | Casual (t-shirt/hoodie) | `0x5C5C5C` (neutral gray) | Wavy hair + stubble |
+
+When building a personality sprite for any of these people:
+1. Start from `PERSONALITY_IDLE` template
+2. Set hair color (index 4) to their palette accent
+3. Add/remove glasses (index 9) per the table
+4. Adjust hair shape in rows 0-7 (curly = wider irregular edges, receding = narrower top rows, bald = skip hair rows)
+5. Add facial hair in rows 17-19 if applicable (beard = fill chin area with dark index)
+6. Set shirt color (index 6) to match their typical clothing
 
 ### Humanoid (Player, NPC, Warrior)
 
@@ -723,9 +755,9 @@ At small scales, subtle changes read as smooth motion:
 | Large (boss, vehicle) | 24x24 or 32x32 | 3 | 72-96px | 13-18% |
 | **Personality (named character)** | **32x48** | **4** | **128x192px** | **35%** |
 
-## External Asset Download (Optional)
+## External Asset Download
 
-If the user explicitly requests real art assets instead of pixel art, use this workflow:
+Use this workflow for downloading real images (logos, meme references, sprite sheets). Logos and meme images from the source tweet are downloaded by default (see Asset Tiers above). Full sprite sheet replacements are optional and used when pixel art isn't sufficient.
 
 ### Reliable Free Sources
 
@@ -765,6 +797,45 @@ if (scene.textures.exists('player-external')) {
   this.sprite = scene.physics.add.sprite(x, y, 'player-fallback');
 }
 ```
+
+### Logo Download Workflow
+
+When a game features a named company, download and use the real logo. SVG preferred (scales cleanly), PNG acceptable.
+
+**Steps:**
+1. Search for the company's official logo (SVG or high-res PNG)
+2. Download to `public/assets/logos/<company>.svg` (or `.png`)
+3. Load in Phaser: `this.load.image('logo-openai', 'assets/logos/openai.svg')`
+4. Use for branding elements (splash, HUD icons, entity overlays)
+5. Keep pixel art fallback for the character sprite itself — logos complement personality sprites, they don't replace them
+
+**Well-known logo sources** (search for these when needed):
+- Company press kits and brand pages typically host official logo files
+- Use WebSearch to find `"<company> logo SVG press kit"` or `"<company> brand assets"`
+
+**In Phaser preload:**
+```js
+preload() {
+  this.load.image('logo-openai', 'assets/logos/openai.png');
+  this.load.image('logo-anthropic', 'assets/logos/anthropic.png');
+}
+```
+
+**Fallback if logo fails to load:**
+```js
+this.load.on('loaderror', (file) => {
+  console.warn(`Failed to load ${file.key}, using pixel art fallback`);
+});
+```
+
+### Meme Image Integration
+
+When `thread.json` includes an `image_url`, download and incorporate it:
+
+1. Download the image: `curl -o public/assets/meme-ref.png "<image_url>"`
+2. Load in Phaser: `this.load.image('meme-ref', 'assets/meme-ref.png')`
+3. Use appropriately — as a background element, game-over splash, or visual reference for character design
+4. Study the image for character appearances, visual style, and meme elements before designing sprites
 
 ## Process
 
