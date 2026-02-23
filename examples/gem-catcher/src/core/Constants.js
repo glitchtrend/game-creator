@@ -1,0 +1,153 @@
+// --- Display ---
+
+// Device pixel ratio (capped at 2 for mobile GPU performance)
+export const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+// Orientation: landscape on desktop, portrait on mobile
+const _isPortrait = window.innerHeight > window.innerWidth;
+
+// Design dimensions (logical game units at 1x scale)
+const _designW = _isPortrait ? 540 : 960;
+const _designH = _isPortrait ? 960 : 540;
+const _designAspect = _designW / _designH;
+
+// Canvas dimensions = device pixel area, maintaining design aspect ratio.
+// This ensures the canvas has enough resolution for the user's actual display
+// so FIT mode never CSS-upscales (which causes blurriness on retina).
+const _deviceW = window.innerWidth * DPR;
+const _deviceH = window.innerHeight * DPR;
+
+let _canvasW, _canvasH;
+if (_deviceW / _deviceH > _designAspect) {
+  // Viewport wider than design -> width-limited by FIT -> match device width
+  _canvasW = _deviceW;
+  _canvasH = Math.round(_deviceW / _designAspect);
+} else {
+  // Viewport taller than design -> width-limited by FIT -> match device width
+  _canvasW = Math.round(_deviceH * _designAspect);
+  _canvasH = _deviceH;
+}
+
+// PX = canvas pixels per design pixel. Scales all absolute values (sizes, speeds, etc.)
+// from design space to canvas space. Gameplay proportions stay identical across all displays.
+export const PX = _canvasW / _designW;
+
+export const GAME = {
+  WIDTH: _canvasW,
+  HEIGHT: _canvasH,
+  IS_PORTRAIT: _isPortrait,
+  // No GRAVITY here -- gravity is set per-physics-body for falling objects only
+};
+
+// --- Safe Zone (Play.fun widget overlay) ---
+// The Play.fun SDK widget renders a 75px fixed bar at top:0, z-index:9999.
+// All UI text, buttons, and interactive elements must be positioned below SAFE_ZONE.TOP.
+export const SAFE_ZONE = {
+  TOP: GAME.HEIGHT * 0.08,
+  BOTTOM: 0,
+  LEFT: 0,
+  RIGHT: 0,
+};
+
+// --- Player (basket/catcher) ---
+
+export const PLAYER = {
+  START_X: GAME.WIDTH * 0.5,
+  START_Y: GAME.HEIGHT * 0.88,
+  WIDTH: GAME.WIDTH * 0.12,
+  HEIGHT: GAME.HEIGHT * 0.04,
+  SPEED: 350 * PX,
+  COLOR: 0x8b5e3c, // warm brown basket color
+};
+
+// --- Gems ---
+
+export const GEM = {
+  SIZE: GAME.WIDTH * 0.04,
+  FALL_SPEED: 150 * PX,
+  SPAWN_INTERVAL: 1200,   // ms between spawns (initial)
+  COLORS: [0x00ff88, 0x44ddff, 0xffaa00, 0xff44aa, 0xffff44], // green, cyan, orange, pink, yellow
+};
+
+// --- Skulls ---
+
+export const SKULL = {
+  SIZE: GAME.WIDTH * 0.04,
+  FALL_SPEED: 120 * PX,   // slightly slower than gems
+  SPAWN_CHANCE: 0.15,      // 15% chance per spawn cycle
+  COLOR: 0xff3333,
+};
+
+// --- Difficulty ---
+
+export const DIFFICULTY = {
+  SCORE_THRESHOLD: 10,     // speed increases every N points
+  SPEED_MULTIPLIER: 1.15,  // fall speed multiplied by this each ramp
+  INTERVAL_REDUCTION: 100, // ms subtracted from spawn interval each ramp
+  MIN_SPAWN_INTERVAL: 400, // ms floor for spawn interval
+  MAX_FALL_SPEED: 400 * PX,
+};
+
+// --- Lives ---
+
+export const LIVES = {
+  STARTING: 3,
+};
+
+// --- Colors ---
+
+export const COLORS = {
+  // Gameplay -- night sky theme
+  SKY_TOP: 0x0b0033,
+  SKY_BOTTOM: 0x1a0066,
+  SKY: 0x0f004d,
+
+  // Player basket
+  PLAYER: 0x8b5e3c,
+  PLAYER_RIM: 0x6b3f1c,
+
+  // Gems -- golden highlight
+  GEM_GLOW: 0xffd700,
+
+  // Skulls
+  SKULL: 0xff3333,
+  SKULL_EYES: 0xffffff,
+
+  // UI text
+  UI_TEXT: '#ffffff',
+  UI_SHADOW: '#000000',
+  MUTED_TEXT: '#8888aa',
+  SCORE_GOLD: '#ffd700',
+  LIVES_RED: '#ff4444',
+
+  // Menu / GameOver gradient backgrounds
+  BG_TOP: 0x0b0033,
+  BG_BOTTOM: 0x1a0066,
+
+  // Buttons
+  BTN_PRIMARY: 0x6c63ff,
+  BTN_PRIMARY_HOVER: 0x857dff,
+  BTN_PRIMARY_PRESS: 0x5a52d5,
+  BTN_TEXT: '#ffffff',
+};
+
+// --- UI sizing (proportional to game dimensions) ---
+
+export const UI = {
+  FONT: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+  TITLE_RATIO: 0.08,          // title font size as % of GAME.HEIGHT
+  HEADING_RATIO: 0.05,        // heading font size
+  BODY_RATIO: 0.035,          // body/button font size
+  SMALL_RATIO: 0.025,         // hint/caption font size
+  BTN_W_RATIO: 0.45,          // button width as % of GAME.WIDTH
+  BTN_H_RATIO: 0.075,         // button height as % of GAME.HEIGHT
+  BTN_RADIUS: 12 * PX,        // button corner radius
+  MIN_TOUCH: 44 * PX,         // minimum touch target
+  // Score HUD omitted -- Play.fun widget displays score in SAFE_ZONE.TOP area
+};
+
+// --- Transitions ---
+
+export const TRANSITION = {
+  FADE_DURATION: 350,
+};
