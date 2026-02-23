@@ -203,6 +203,12 @@ Launch a `Task` subagent with these instructions:
 > - **No in-game score HUD** — the Play.fun widget displays score in a deadzone at the top of the game. Do not create a UIScene or HUD overlay for score display.
 > - **Mobile-first input**: Choose the best mobile input scheme for the game concept (tap zones, virtual joystick, gyroscope tilt, swipe). Implement touch + keyboard from the start — never keyboard-only. Use the unified analog InputSystem pattern (moveX/moveZ) so game logic is input-source-agnostic.
 > - Wire spectacle events: emit `SPECTACLE_ENTRANCE` in `create()`, `SPECTACLE_ACTION` on every player input, `SPECTACLE_HIT` on score/destroy, `SPECTACLE_COMBO` on consecutive hits (pass `{ combo }` ), `SPECTACLE_STREAK` at milestones (5, 10, 25 — pass `{ streak }`), `SPECTACLE_NEAR_MISS` on close calls
+>
+> **Visual identity — push the pose:**
+> - If the player character represents a real person or brand, build visual recognition into the entity from the start. Don't use generic circles/rectangles as placeholders — use descriptive colors, proportions, and features that communicate identity even before pixel art is added.
+> - Named opponents/NPCs must have visual presence on screen — never text-only. At minimum use distinct colored shapes that suggest the brand. Better: simple character forms with recognizable features.
+> - Collectibles and hazards must be visually self-explanatory. Avoid abstract concepts ("imagination blocks", "creativity sparks"). Use concrete objects players instantly recognize (polaroids, trophies, lightning bolts, money bags, etc.).
+> - Think: "Could someone screenshot this and immediately know what the game is about?"
 > - Add entrance sequence in `create()`: player starts off-screen, tweens into position with `Bounce.easeOut`, landing shake + particle burst
 > - Add combo tracking to GameState: `combo` (current streak, resets on miss), `bestCombo` (session high), both reset in `reset()`
 > - Ensure restart is clean — test mentally that 3 restarts in a row would work identically
@@ -225,6 +231,7 @@ Launch a `Task` subagent with these instructions:
 > ## Entity Interactions
 > For each visible entity (enemies, projectiles, collectibles, environmental objects):
 > - **Name**: what it is
+> - **Visual identity**: what it should LOOK like and why (reference real logos, people, objects — not abstract concepts)
 > - **Behavior**: what it does (moves, falls, spawns, etc.)
 > - **Player interaction**: how the player interacts with it (dodge, collect, tap, block, or "none — background/decoration")
 > - **AI/opponent interaction**: how the opponent interacts with it, if applicable
@@ -272,6 +279,13 @@ Launch a `Task` subagent with these instructions:
 > 8. Update entity constructors to use pixel art instead of geometric shapes
 > 9. Add Phaser animations for entities with multiple frames
 > 10. Adjust physics bodies for new sprite dimensions
+>
+> **Push the pose — thematic expressiveness:**
+> - Sprites must visually embody who/what they represent. A sprite for "Grok AI" should look like Grok (logo features, brand colors, xAI aesthetic) — not a generic robot or colored circle.
+> - For real people: exaggerate their most recognizable features (signature hairstyle, glasses, facial hair, clothing). Recognition IS the meme hook.
+> - For brands/products: incorporate logo shapes, brand colors, and distinctive visual elements into the sprite design.
+> - For game objects: make them instantly recognizable. A "power-up" should look like the specific thing it represents in the theme, not a generic star or diamond.
+> - Opponents should be visually distinct from each other — different colors, shapes, sizes, and personality. A player should tell them apart at a glance.
 >
 > Do NOT run builds — the orchestrator handles verification.
 
@@ -367,7 +381,7 @@ Launch a `Task` subagent with these instructions:
 > 4. Add audio events to EventBus.js (including `AUDIO_TOGGLE_MUTE`)
 > 5. Wire audio into main.js and all scenes
 > 6. **Important**: Use explicit imports from `@strudel/web` (`import { stack, note, s } from '@strudel/web'`) — do NOT rely on global registration
-> 7. **Mute toggle**: Wire `AUDIO_TOGGLE_MUTE` to `gameState.game.isMuted`. Both BGM and SFX must check `isMuted` before playing. Add M key shortcut and a speaker icon UI button.
+> 7. **Mute toggle**: Wire `AUDIO_TOGGLE_MUTE` to `gameState.game.isMuted`. Both BGM and SFX must check `isMuted` before playing. Add M key shortcut and a speaker icon UI button drawn with the **Phaser Graphics API** (`fillRect`, `fillTriangle`, `arc`, `lineBetween`). Do NOT use `this.add.text()` for the mute button — see the game-audio skill "Mute Button" section for exact drawing code.
 >
 > Do NOT run builds — the orchestrator handles verification.
 
