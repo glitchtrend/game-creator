@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME, SKY, GROUND } from '../core/Constants.js';
+import { GAME, SKY, GROUND, PX } from '../core/Constants.js';
 
 export class Background {
   constructor(scene) {
@@ -21,19 +21,21 @@ export class Background {
     const botG = (SKY.BOTTOM_COLOR >> 8) & 0xff;
     const botB = SKY.BOTTOM_COLOR & 0xff;
 
-    for (let y = 0; y < GROUND.Y; y++) {
+    // Draw gradient in bands of ceil(PX) pixels for performance at high DPR
+    const step = Math.max(1, Math.ceil(PX));
+    for (let y = 0; y < GROUND.Y; y += step) {
       const t = y / GROUND.Y;
       const r = Math.round(topR + (botR - topR) * t);
       const g = Math.round(topG + (botG - topG) * t);
       const b = Math.round(topB + (botB - topB) * t);
       bg.fillStyle(Phaser.Display.Color.GetColor(r, g, b), 1);
-      bg.fillRect(0, y, GAME.WIDTH, 1);
+      bg.fillRect(0, y, GAME.WIDTH, step);
     }
   }
 
   createClouds(scene) {
     for (let i = 0; i < SKY.CLOUD_COUNT; i++) {
-      const x = Math.random() * (GAME.WIDTH + 100);
+      const x = Math.random() * (GAME.WIDTH + 100 * PX);
       const y = SKY.CLOUD_MIN_Y + Math.random() * (SKY.CLOUD_MAX_Y - SKY.CLOUD_MIN_Y);
       const scale = 0.5 + Math.random() * 0.8;
       this.clouds.push(this.createCloud(scene, x, y, scale));
@@ -45,9 +47,9 @@ export class Background {
     gfx.setDepth(1);
     const color = Phaser.Utils.Array.GetRandom(SKY.CLOUD_COLORS);
     gfx.fillStyle(color, SKY.CLOUD_ALPHA * scale);
-    gfx.fillEllipse(0, 0, 60 * scale, 30 * scale);
-    gfx.fillEllipse(25 * scale, -5 * scale, 50 * scale, 25 * scale);
-    gfx.fillEllipse(-20 * scale, 5 * scale, 40 * scale, 20 * scale);
+    gfx.fillEllipse(0, 0, 60 * PX * scale, 30 * PX * scale);
+    gfx.fillEllipse(25 * PX * scale, -5 * PX * scale, 50 * PX * scale, 25 * PX * scale);
+    gfx.fillEllipse(-20 * PX * scale, 5 * PX * scale, 40 * PX * scale, 20 * PX * scale);
     gfx.setPosition(x, y);
     return { gfx, speed: SKY.CLOUD_SPEED * scale };
   }
@@ -69,16 +71,16 @@ export class Background {
 
     // Grass line along top
     gfx.fillStyle(GROUND.GRASS_COLOR, 1);
-    gfx.fillRect(0, 0, GAME.WIDTH, 4);
+    gfx.fillRect(0, 0, GAME.WIDTH, 4 * PX);
 
     // Dark line
-    gfx.lineStyle(2, GROUND.DARK_COLOR, 1);
-    gfx.lineBetween(0, 4, GAME.WIDTH, 4);
+    gfx.lineStyle(2 * PX, GROUND.DARK_COLOR, 1);
+    gfx.lineBetween(0, 4 * PX, GAME.WIDTH, 4 * PX);
 
     // Diagonal stripes for texture
     gfx.fillStyle(GROUND.STRIPE_COLOR, 0.3);
-    for (let x = -GROUND.HEIGHT; x < GAME.WIDTH + GROUND.HEIGHT; x += 24) {
-      gfx.fillRect(x, 8, 12, GROUND.HEIGHT);
+    for (let x = -GROUND.HEIGHT; x < GAME.WIDTH + GROUND.HEIGHT; x += 24 * PX) {
+      gfx.fillRect(x, 8 * PX, 12 * PX, GROUND.HEIGHT);
     }
 
     return gfx;
@@ -88,8 +90,8 @@ export class Background {
     // Scroll clouds
     this.clouds.forEach(cloud => {
       cloud.gfx.x -= cloud.speed * (delta / 1000);
-      if (cloud.gfx.x < -80) {
-        cloud.gfx.x = GAME.WIDTH + 80;
+      if (cloud.gfx.x < -80 * PX) {
+        cloud.gfx.x = GAME.WIDTH + 80 * PX;
       }
     });
 

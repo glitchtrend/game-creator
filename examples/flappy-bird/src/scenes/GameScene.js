@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME, BIRD, PIPE, GROUND, TRANSITION } from '../core/Constants.js';
+import { GAME, BIRD, PIPE, GROUND, TRANSITION, UI, PX } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 import { gameState } from '../core/GameState.js';
 import { Bird } from '../entities/Bird.js';
@@ -23,7 +23,7 @@ export class GameScene extends Phaser.Scene {
     this.background = new Background(this);
 
     // Ground physics collider (invisible, at ground surface)
-    this.groundCollider = this.add.rectangle(GAME.WIDTH / 2, GROUND.Y + 2, GAME.WIDTH, 8, 0x000000, 0);
+    this.groundCollider = this.add.rectangle(GAME.WIDTH / 2, GROUND.Y + 2 * PX, GAME.WIDTH, 8 * PX, 0x000000, 0);
     this.physics.add.existing(this.groundCollider, true);
 
     // Bird
@@ -58,23 +58,23 @@ export class GameScene extends Phaser.Scene {
 
   showGetReady() {
     const cx = GAME.WIDTH / 2;
-    const cy = GAME.HEIGHT / 2 - 60;
+    const cy = GAME.HEIGHT / 2 - 60 * PX;
 
     this.getReadyText = this.add.text(cx, cy, 'GET READY', {
-      fontSize: '36px',
-      fontFamily: 'Arial Black, Arial, sans-serif',
+      fontSize: `${Math.round(GAME.HEIGHT * UI.HEADING_RATIO)}px`,
+      fontFamily: UI.FONT,
       color: '#ffffff',
       stroke: '#000000',
-      strokeThickness: 5,
+      strokeThickness: UI.STROKE,
       fontStyle: 'bold',
     }).setOrigin(0.5).setDepth(50);
 
-    this.tapText = this.add.text(cx, cy + 60, 'Tap or Press SPACE', {
-      fontSize: '18px',
+    this.tapText = this.add.text(cx, cy + 60 * PX, 'Tap or Press SPACE', {
+      fontSize: `${Math.round(GAME.HEIGHT * UI.SMALL_RATIO)}px`,
       fontFamily: 'Arial, sans-serif',
       color: '#ffffff',
       stroke: '#000000',
-      strokeThickness: 3,
+      strokeThickness: UI.THIN_STROKE,
     }).setOrigin(0.5).setDepth(50);
 
     this.tweens.add({
@@ -148,7 +148,7 @@ export class GameScene extends Phaser.Scene {
   checkPipeCollisions() {
     const birdBounds = this.bird.sprite.getBounds();
     // Shrink bird hitbox slightly for fairness
-    const shrink = 4;
+    const shrink = 4 * PX;
     birdBounds.x += shrink;
     birdBounds.y += shrink;
     birdBounds.width -= shrink * 2;

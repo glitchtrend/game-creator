@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { BIRD, GAME, GROUND } from '../core/Constants.js';
+import { BIRD, GAME, GROUND, PX } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 
 export class Bird {
@@ -7,21 +7,25 @@ export class Bird {
     this.scene = scene;
     this.alive = true;
 
+    // Texture dimensions with padding
+    const texW = BIRD.WIDTH + 10 * PX;
+    const texH = BIRD.HEIGHT + 10 * PX;
+
     // Build the bird from graphics
     const gfx = scene.add.graphics();
-    this.drawBird(gfx);
-    gfx.generateTexture('bird', BIRD.WIDTH + 10, BIRD.HEIGHT + 10);
+    this.drawBird(gfx, texW, texH);
+    gfx.generateTexture('bird', Math.ceil(texW), Math.ceil(texH));
     gfx.destroy();
 
     this.sprite = scene.physics.add.sprite(BIRD.START_X, BIRD.START_Y, 'bird');
-    this.sprite.setBodySize(BIRD.WIDTH - 4, BIRD.HEIGHT - 4);
+    this.sprite.setBodySize(BIRD.WIDTH - 4 * PX, BIRD.HEIGHT - 4 * PX);
     this.sprite.body.setAllowGravity(false);
     this.sprite.setDepth(10);
   }
 
-  drawBird(gfx) {
-    const cx = (BIRD.WIDTH + 10) / 2;
-    const cy = (BIRD.HEIGHT + 10) / 2;
+  drawBird(gfx, texW, texH) {
+    const cx = texW / 2;
+    const cy = texH / 2;
 
     // Body
     gfx.fillStyle(BIRD.BODY_COLOR, 1);
@@ -29,26 +33,26 @@ export class Bird {
 
     // Belly highlight
     gfx.fillStyle(BIRD.BODY_LIGHT, 1);
-    gfx.fillEllipse(cx + 2, cy + 3, BIRD.WIDTH * 0.6, BIRD.HEIGHT * 0.5);
+    gfx.fillEllipse(cx + 2 * PX, cy + 3 * PX, BIRD.WIDTH * 0.6, BIRD.HEIGHT * 0.5);
 
     // Wing
     gfx.fillStyle(BIRD.WING_COLOR, 1);
-    gfx.fillEllipse(cx - 4, cy - 1, 16, 10);
+    gfx.fillEllipse(cx - 4 * PX, cy - 1 * PX, 16 * PX, 10 * PX);
 
     // Eye (white)
     gfx.fillStyle(BIRD.EYE_COLOR, 1);
-    gfx.fillCircle(cx + 8, cy - 4, 5);
+    gfx.fillCircle(cx + 8 * PX, cy - 4 * PX, 5 * PX);
 
     // Pupil
     gfx.fillStyle(BIRD.PUPIL_COLOR, 1);
-    gfx.fillCircle(cx + 10, cy - 4, 2.5);
+    gfx.fillCircle(cx + 10 * PX, cy - 4 * PX, 2.5 * PX);
 
     // Beak
     gfx.fillStyle(BIRD.BEAK_COLOR, 1);
     gfx.fillTriangle(
-      cx + 14, cy,
-      cx + 22, cy + 3,
-      cx + 14, cy + 6
+      cx + 14 * PX, cy,
+      cx + 22 * PX, cy + 3 * PX,
+      cx + 14 * PX, cy + 6 * PX
     );
   }
 

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { PIPE, GAME, GROUND } from '../core/Constants.js';
+import { PIPE, GAME, GROUND, PX } from '../core/Constants.js';
 
 export class Pipe {
   constructor(scene, x, gapCenterY) {
@@ -11,45 +11,47 @@ export class Pipe {
     const bottomPipeY = gapCenterY + halfGap;
     const bottomPipeHeight = GROUND.Y - bottomPipeY;
 
-    // Generate textures once (cached by key)
-    this.ensureTextures(scene, topPipeHeight, bottomPipeHeight);
+    // Generate textures once (cached by key, using rounded height for stable keys)
+    const topKey = Math.round(topPipeHeight);
+    const botKey = Math.round(bottomPipeHeight);
+    this.ensureTextures(scene, topPipeHeight, bottomPipeHeight, topKey, botKey);
 
     // Top pipe (flipped)
-    this.top = scene.physics.add.image(x, topPipeHeight / 2, `pipe-top-${topPipeHeight}`);
+    this.top = scene.physics.add.image(x, topPipeHeight / 2, `pipe-top-${topKey}`);
     this.top.body.setAllowGravity(false);
     this.top.body.setImmovable(true);
     this.top.body.setVelocityX(-PIPE.SPEED);
     this.top.setDepth(5);
 
     // Bottom pipe
-    this.bottom = scene.physics.add.image(x, bottomPipeY + bottomPipeHeight / 2, `pipe-bot-${bottomPipeHeight}`);
+    this.bottom = scene.physics.add.image(x, bottomPipeY + bottomPipeHeight / 2, `pipe-bot-${botKey}`);
     this.bottom.body.setAllowGravity(false);
     this.bottom.body.setImmovable(true);
     this.bottom.body.setVelocityX(-PIPE.SPEED);
     this.bottom.setDepth(5);
 
     // Score zone (invisible trigger between pipes)
-    this.scoreZone = scene.add.zone(x + PIPE.WIDTH / 2 + 2, gapCenterY, 4, PIPE.GAP);
+    this.scoreZone = scene.add.zone(x + PIPE.WIDTH / 2 + 2 * PX, gapCenterY, 4 * PX, PIPE.GAP);
     scene.physics.add.existing(this.scoreZone, false);
     this.scoreZone.body.setAllowGravity(false);
     this.scoreZone.body.setVelocityX(-PIPE.SPEED);
   }
 
-  ensureTextures(scene, topH, botH) {
-    const topKey = `pipe-top-${topH}`;
-    const botKey = `pipe-bot-${botH}`;
+  ensureTextures(scene, topH, botH, topKey, botKey) {
+    const topTexKey = `pipe-top-${topKey}`;
+    const botTexKey = `pipe-bot-${botKey}`;
 
-    if (!scene.textures.exists(topKey)) {
+    if (!scene.textures.exists(topTexKey)) {
       const g = scene.add.graphics();
       this.drawPipe(g, PIPE.WIDTH, topH, true);
-      g.generateTexture(topKey, PIPE.WIDTH + PIPE.CAP_OVERHANG * 2, topH);
+      g.generateTexture(topTexKey, Math.ceil(PIPE.WIDTH + PIPE.CAP_OVERHANG * 2), Math.ceil(topH));
       g.destroy();
     }
 
-    if (!scene.textures.exists(botKey)) {
+    if (!scene.textures.exists(botTexKey)) {
       const g = scene.add.graphics();
       this.drawPipe(g, PIPE.WIDTH, botH, false);
-      g.generateTexture(botKey, PIPE.WIDTH + PIPE.CAP_OVERHANG * 2, botH);
+      g.generateTexture(botTexKey, Math.ceil(PIPE.WIDTH + PIPE.CAP_OVERHANG * 2), Math.ceil(botH));
       g.destroy();
     }
   }
@@ -65,11 +67,11 @@ export class Pipe {
 
     // Highlight stripe
     gfx.fillStyle(PIPE.HIGHLIGHT_COLOR, 1);
-    gfx.fillRect(overhang + 4, 0, 6, height);
+    gfx.fillRect(overhang + 4 * PX, 0, 6 * PX, height);
 
     // Dark edge
     gfx.fillStyle(PIPE.BODY_DARK, 1);
-    gfx.fillRect(overhang + width - 6, 0, 6, height);
+    gfx.fillRect(overhang + width - 6 * PX, 0, 6 * PX, height);
 
     // Cap
     const capY = flipped ? height - capH : 0;
@@ -78,15 +80,15 @@ export class Pipe {
 
     // Cap highlight
     gfx.fillStyle(PIPE.HIGHLIGHT_COLOR, 1);
-    gfx.fillRect(2, capY + 2, 6, capH - 4);
+    gfx.fillRect(2 * PX, capY + 2 * PX, 6 * PX, capH - 4 * PX);
 
     // Cap dark edge
     gfx.fillStyle(PIPE.BODY_DARK, 1);
-    gfx.fillRect(totalW - 6, capY, 6, capH);
+    gfx.fillRect(totalW - 6 * PX, capY, 6 * PX, capH);
   }
 
   isOffScreen() {
-    return this.top.x < -PIPE.WIDTH - 20;
+    return this.top.x < -PIPE.WIDTH - 20 * PX;
   }
 
   destroy() {

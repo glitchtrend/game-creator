@@ -12,13 +12,18 @@ test.describe('Flappy Bird — Performance', () => {
     expect(elapsed).toBeLessThan(5000);
   });
 
-  test('canvas has correct dimensions', async ({ gamePage: page }) => {
+  test('canvas has correct aspect ratio', async ({ gamePage: page }) => {
     const size = await page.evaluate(() => ({
       width: window.__GAME__.canvas.width,
       height: window.__GAME__.canvas.height,
     }));
-    expect(size.width).toBe(400);
-    expect(size.height).toBe(600);
+    // Canvas should maintain the 400:600 = 2:3 aspect ratio
+    const aspect = size.width / size.height;
+    const expectedAspect = 400 / 600;
+    expect(Math.abs(aspect - expectedAspect)).toBeLessThan(0.02);
+    // Canvas should be at least the design dimensions
+    expect(size.width).toBeGreaterThanOrEqual(400);
+    expect(size.height).toBeGreaterThanOrEqual(600);
   });
 
   test('maintains minimum FPS', async ({ gamePage: page }) => {

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME, COLORS, TRANSITION } from '../core/Constants.js';
+import { GAME, COLORS, TRANSITION, UI, PX } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 import { gameState } from '../core/GameState.js';
 
@@ -18,62 +18,67 @@ export class GameOverScene extends Phaser.Scene {
     eventBus.emit(Events.MUSIC_GAMEOVER);
 
     // Game Over title
-    const title = this.add.text(cx, cy - 140, 'GAME OVER', {
-      fontSize: '40px',
-      fontFamily: 'Arial Black, Arial, sans-serif',
+    const titleFontSize = Math.round(GAME.HEIGHT * UI.TITLE_RATIO);
+    const title = this.add.text(cx, cy - GAME.HEIGHT * 0.233, 'GAME OVER', {
+      fontSize: `${titleFontSize}px`,
+      fontFamily: UI.FONT,
       color: '#ffffff',
       stroke: '#000000',
-      strokeThickness: 5,
+      strokeThickness: UI.STROKE,
       fontStyle: 'bold',
     }).setOrigin(0.5);
 
     // Slide in from top
     title.setAlpha(0);
-    title.y -= 30;
+    title.y -= 30 * PX;
     this.tweens.add({
       targets: title,
       alpha: 1,
-      y: title.y + 30,
+      y: title.y + 30 * PX,
       duration: 400,
       ease: 'Back.easeOut',
     });
 
     // Score panel
-    const panelW = 240;
-    const panelH = 140;
-    const panelY = cy - 20;
+    const panelW = GAME.WIDTH * UI.PANEL_W_RATIO;
+    const panelH = GAME.HEIGHT * UI.PANEL_H_RATIO;
+    const panelY = cy - GAME.HEIGHT * 0.033;
 
     // Panel background
     const panel = this.add.graphics();
     panel.fillStyle(COLORS.PANEL_BG, 1);
-    panel.fillRoundedRect(cx - panelW / 2, panelY - panelH / 2, panelW, panelH, 10);
-    panel.lineStyle(3, COLORS.PANEL_BORDER, 1);
-    panel.strokeRoundedRect(cx - panelW / 2, panelY - panelH / 2, panelW, panelH, 10);
+    panel.fillRoundedRect(cx - panelW / 2, panelY - panelH / 2, panelW, panelH, UI.BTN_RADIUS);
+    panel.lineStyle(UI.PANEL_BORDER, COLORS.PANEL_BORDER, 1);
+    panel.strokeRoundedRect(cx - panelW / 2, panelY - panelH / 2, panelW, panelH, UI.BTN_RADIUS);
 
-    // Score
-    this.add.text(cx - 90, panelY - 35, 'Score', {
-      fontSize: '18px',
+    // Score label
+    const labelFontSize = Math.round(GAME.HEIGHT * UI.SMALL_RATIO);
+    const valueFontSize = Math.round(GAME.HEIGHT * UI.BODY_RATIO);
+    const labelX = cx - panelW * 0.375;
+
+    this.add.text(labelX, panelY - panelH * 0.25, 'Score', {
+      fontSize: `${labelFontSize}px`,
       fontFamily: 'Arial, sans-serif',
       color: '#5a3e00',
     });
 
-    this.add.text(cx + 90, panelY - 35, `${gameState.score}`, {
-      fontSize: '24px',
-      fontFamily: 'Arial Black, Arial, sans-serif',
+    this.add.text(cx + panelW * 0.375, panelY - panelH * 0.25, `${gameState.score}`, {
+      fontSize: `${valueFontSize}px`,
+      fontFamily: UI.FONT,
       color: '#5a3e00',
       fontStyle: 'bold',
     }).setOrigin(1, 0);
 
-    // Best
-    this.add.text(cx - 90, panelY + 10, 'Best', {
-      fontSize: '18px',
+    // Best label
+    this.add.text(labelX, panelY + panelH * 0.07, 'Best', {
+      fontSize: `${labelFontSize}px`,
       fontFamily: 'Arial, sans-serif',
       color: '#5a3e00',
     });
 
-    this.add.text(cx + 90, panelY + 10, `${gameState.bestScore}`, {
-      fontSize: '24px',
-      fontFamily: 'Arial Black, Arial, sans-serif',
+    this.add.text(cx + panelW * 0.375, panelY + panelH * 0.07, `${gameState.bestScore}`, {
+      fontSize: `${valueFontSize}px`,
+      fontFamily: UI.FONT,
       color: '#5a3e00',
       fontStyle: 'bold',
     }).setOrigin(1, 0);
@@ -83,23 +88,25 @@ export class GameOverScene extends Phaser.Scene {
       const medalColor = gameState.score >= 20 ? COLORS.MEDAL_GOLD :
                           gameState.score >= 10 ? COLORS.MEDAL_SILVER :
                           COLORS.MEDAL_BRONZE;
-      const medal = this.add.circle(cx - 60, panelY + 5, 18, medalColor, 1);
-      this.add.text(cx - 60, panelY + 5, gameState.score >= 20 ? 'G' : gameState.score >= 10 ? 'S' : 'B', {
-        fontSize: '16px',
-        fontFamily: 'Arial Black, Arial, sans-serif',
+      this.add.circle(cx - panelW * 0.25, panelY + panelH * 0.04, UI.MEDAL_RADIUS, medalColor, 1);
+      this.add.text(cx - panelW * 0.25, panelY + panelH * 0.04, gameState.score >= 20 ? 'G' : gameState.score >= 10 ? 'S' : 'B', {
+        fontSize: `${Math.round(GAME.HEIGHT * UI.CAPTION_RATIO)}px`,
+        fontFamily: UI.FONT,
         color: '#5a3e00',
         fontStyle: 'bold',
       }).setOrigin(0.5);
     }
 
-    // Restart button — use a visible rectangle as the interactive element
-    const btnY = cy + 80;
-    const btn = this.add.rectangle(cx, btnY, 180, 48, COLORS.BUTTON, 1)
+    // Restart button
+    const btnW = GAME.WIDTH * UI.BTN_W_RATIO;
+    const btnH = GAME.HEIGHT * UI.BTN_H_RATIO;
+    const btnY = cy + GAME.HEIGHT * 0.133;
+    const btn = this.add.rectangle(cx, btnY, btnW, btnH, COLORS.BUTTON, 1)
       .setInteractive({ useHandCursor: true });
 
     const btnText = this.add.text(cx, btnY, 'RESTART', {
-      fontSize: '22px',
-      fontFamily: 'Arial Black, Arial, sans-serif',
+      fontSize: `${Math.round(GAME.HEIGHT * UI.BODY_RATIO)}px`,
+      fontFamily: UI.FONT,
       color: COLORS.BUTTON_TEXT,
       fontStyle: 'bold',
     }).setOrigin(0.5);

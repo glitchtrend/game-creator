@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME, COLORS, TRANSITION } from '../core/Constants.js';
+import { GAME, COLORS, TRANSITION, UI } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 
 export class UIScene extends Phaser.Scene {
@@ -11,12 +11,12 @@ export class UIScene extends Phaser.Scene {
     const cx = GAME.WIDTH / 2;
 
     // Big centered score (Flappy Bird style)
-    this.scoreText = this.add.text(cx, 50, '0', {
-      fontSize: '52px',
-      fontFamily: 'Arial Black, Arial, sans-serif',
+    this.scoreText = this.add.text(cx, GAME.HEIGHT * UI.SCORE_Y_RATIO, '0', {
+      fontSize: `${Math.round(GAME.HEIGHT * UI.SCORE_FONT_RATIO)}px`,
+      fontFamily: UI.FONT,
       color: COLORS.UI_TEXT,
       stroke: COLORS.SCORE_STROKE,
-      strokeThickness: 5,
+      strokeThickness: UI.STROKE,
       fontStyle: 'bold',
     }).setOrigin(0.5).setDepth(100);
 

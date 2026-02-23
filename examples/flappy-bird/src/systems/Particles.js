@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { PARTICLES } from '../core/Constants.js';
+import { PARTICLES, PX } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 
 export class ParticleSystem {
@@ -20,8 +20,9 @@ export class ParticleSystem {
   burstScore(x, y) {
     for (let i = 0; i < PARTICLES.SCORE_BURST_COUNT; i++) {
       const angle = (Math.PI * 2 * i) / PARTICLES.SCORE_BURST_COUNT + Math.random() * 0.3;
-      const speed = 40 + Math.random() * 60;
-      const particle = this.scene.add.circle(x, y, 2 + Math.random() * 2, PARTICLES.SCORE_BURST_COLOR, 1);
+      const speed = PARTICLES.SCORE_BURST_SPEED_MIN + Math.random() * (PARTICLES.SCORE_BURST_SPEED_MAX - PARTICLES.SCORE_BURST_SPEED_MIN);
+      const radius = PARTICLES.SCORE_BURST_RADIUS_MIN + Math.random() * (PARTICLES.SCORE_BURST_RADIUS_MAX - PARTICLES.SCORE_BURST_RADIUS_MIN);
+      const particle = this.scene.add.circle(x, y, radius, PARTICLES.SCORE_BURST_COLOR, 1);
       particle.setDepth(30);
       this.scene.tweens.add({
         targets: particle,
@@ -39,15 +40,15 @@ export class ParticleSystem {
   burstDeath(x, y) {
     for (let i = 0; i < PARTICLES.DEATH_BURST_COUNT; i++) {
       const angle = (Math.PI * 2 * i) / PARTICLES.DEATH_BURST_COUNT + Math.random() * 0.4;
-      const speed = 60 + Math.random() * 80;
+      const speed = PARTICLES.DEATH_BURST_SPEED_MIN + Math.random() * (PARTICLES.DEATH_BURST_SPEED_MAX - PARTICLES.DEATH_BURST_SPEED_MIN);
       const color = Phaser.Utils.Array.GetRandom(PARTICLES.DEATH_BURST_COLORS);
-      const size = 2 + Math.random() * 4;
-      const particle = this.scene.add.circle(x, y, size, color, 1);
+      const radius = PARTICLES.DEATH_BURST_RADIUS_MIN + Math.random() * (PARTICLES.DEATH_BURST_RADIUS_MAX - PARTICLES.DEATH_BURST_RADIUS_MIN);
+      const particle = this.scene.add.circle(x, y, radius, color, 1);
       particle.setDepth(30);
       this.scene.tweens.add({
         targets: particle,
         x: x + Math.cos(angle) * speed,
-        y: y + Math.sin(angle) * speed - 20,
+        y: y + Math.sin(angle) * speed - 20 * PX,
         alpha: 0,
         scale: 0.1,
         duration: 400 + Math.random() * 300,
