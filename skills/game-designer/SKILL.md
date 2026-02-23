@@ -75,6 +75,10 @@ After presenting the report, implement the improvements. Follow these rules:
 - **Game flow** (scene order, win/lose conditions) — don't restructure
 - **Spawn timing or difficulty curves** — gameplay balance, not visual
 
+## Performance Notes
+
+- **Tween-based particles on mobile**: When using Phaser tweens as particles (creating circles/shapes, tweening alpha/scale/position, then destroying), limit to **15-20 concurrent tween particles** per burst. On low-end mobile GPUs, 50+ simultaneous tweens cause frame drops. For high-volume effects (trails, continuous emitters), use a pool of reusable objects instead of create/destroy cycles. Define particle count limits in `Constants.js` (e.g., `PARTICLES.GEM_BURST_COUNT: 12`).
+
 ## Common Visual Bugs to Avoid
 
 - **Layered invisible buttons** — Never use `setAlpha(0)` on an interactive element with a Graphics or Sprite drawn on top for visual styling. The top layer intercepts pointer events. Instead, apply visual changes (fill color, scale tweens) directly to the interactive element itself via `setFillStyle()`.

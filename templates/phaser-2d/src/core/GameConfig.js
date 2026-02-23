@@ -12,6 +12,9 @@ export const GameConfig = {
   backgroundColor: COLORS.SKY,
   roundPixels: true,
   antialias: true,
+  render: {
+    preserveDrawingBuffer: true,  // Needed for iterate-client screenshots
+  },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

@@ -277,6 +277,8 @@ Every sprite must be recognizable from its outline alone. At 16x16, details are 
 - **Ghost**: Wispy bottom edge, floaty posture
 - **Warrior**: Square shoulders, weapon at side
 
+**Readability at game scale**: Test your sprite at the actual rendered size (grid * scale). A 12x14 sprite at 3x scale is only 36x42 pixels on screen — fine detail is lost. For items and collectibles below 16x16 grid, use bold geometric silhouettes (diamond, star, circle) rather than trying to draw realistic objects. Use a **2px outline** (palette index 1) on all edges for small sprites to ensure they pop against any background. Hostile entities (skulls, bombs) should have a fundamentally different silhouette from collectibles (gems, coins) — size, shape, or aspect ratio should differ so players can distinguish them instantly even in peripheral vision.
+
 ### 2. Two-Tone Minimum
 Every sprite needs at least:
 - **Outline color** (palette index 1) — darkest, defines the shape
@@ -295,6 +297,7 @@ At small scales, subtle changes read as smooth motion:
 - **Fly**: Wings up/down, 2 frames
 - **Idle**: Optional 1px bob (use Phaser tween instead of extra frame)
 - **Attack**: Not needed at 16x16 — use screen effects (flash, shake) instead
+- **Never rotate small pixel sprites** — rotation on sprites below 24x24 destroys the pixel grid and makes them look like blurry circles. Use vertical bobbing, scale pulses, or frame-based animation instead. Rotation only works well on sprites 32x32+.
 
 ### 5. Palette Discipline
 - Every sprite in the game shares the same palette

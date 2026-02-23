@@ -31,10 +31,27 @@ Strudel is a **pattern looping engine** — every `.play()` call starts a contin
 | Background music | Strudel | `@strudel/web` |
 | Sound effects | Web Audio API | Built into browsers |
 | Synths | Built-in oscillators (square, triangle, sawtooth, sine), FM synthesis | — |
-| Samples | Built-in drum kits (TR-808, TR-909), percussion | `@strudel/web` |
 | Effects | Reverb, delay, filters (LPF/HPF/BPF), distortion, bit-crush, panning | Both |
 
 No external audio files needed — all sounds are procedural.
+
+### Critical: Synth-Only BGM (No Sample Names)
+
+**Only use synth oscillator types** in BGM patterns: `square`, `triangle`, `sawtooth`, `sine`. These are built-in and always available.
+
+**Never use sample names** like `bd`, `sd`, `hh`, `cp`, `oh` (drum machine samples) unless you explicitly load a sample bank with Strudel's `samples()` function. Without sample loading, these names produce silence — no error, just no sound. This is a common mistake.
+
+For percussion in BGM, synthesize drums with oscillators instead:
+```js
+// Kick drum — low sine with fast decay
+note('c1').s('sine').gain(0.3).decay(0.15).sustain(0)
+
+// Snare — noise burst (use .n() for noise channel if available, or skip)
+note('c3').s('square').gain(0.15).decay(0.08).sustain(0).lpf(1500)
+
+// Hi-hat — high-frequency square with very short decay
+note('c6').s('square').gain(0.08).decay(0.03).sustain(0).lpf(8000)
+```
 
 ## Setup
 
@@ -333,7 +350,8 @@ Wire the toggle to:
 ## Important Notes
 
 - **Browser autoplay**: Audio MUST be initiated from a user click/tap. Call `initStrudel()` inside a click handler.
-- **`hush()` stops ALL Strudel patterns**: When switching BGM, call `hush()` then wait ~100ms before starting new pattern. SFX are unaffected since they use Web Audio API.
+- **`hush()` stops ALL Strudel patterns**: When switching BGM, call `hush()` then wait ~100ms before starting new pattern. SFX are unaffected since they use Web Audio API. This is a key advantage of the two-engine split — `hush()` never kills your SFX.
+- **Recommended architecture**: Strudel for looping BGM, Web Audio API for one-shot SFX. This gives clean separation: BGM can be stopped/switched with `hush()` without affecting SFX, and SFX fire instantly with zero scheduler latency. The AudioBridge should persist mute preference to `localStorage` for cross-session continuity.
 - **Strudel is AGPL-3.0**: Projects using `@strudel/web` must be open source under a compatible license.
 - **No external audio files needed**: Everything is synthesized.
 - **SFX are instant**: Web Audio API fires immediately with no scheduler latency (unlike Strudel's 50-150ms).
