@@ -89,7 +89,7 @@ Launch a `Task` subagent with these instructions:
 > ```
 > After running, read the state JSON files (`output/iterate/state-*.json`) and error files (`output/iterate/errors-*.json`):
 > - **Scoring**: At least one state file should show `score > 0`
-> - **Death**: At least one state file should show `mode: "game_over"`
+> - **Death**: At least one state file should show `mode: "game_over"`. Mark as SKIPPED (not FAIL) if game_over is not reached — some games have multi-life systems or random hazard spawns that make death unreliable in short iterate runs. Death SKIPPED is acceptable and does not block the pipeline.
 > - **Errors**: No critical errors in error files
 >
 > Skip this phase if `scripts/iterate-client.js` is not present.
@@ -113,9 +113,13 @@ Launch a `Task` subagent with these instructions:
 > 7. Wait for game over (or navigate to it), `browser_take_screenshot` — save as `output/qa-gameover.png`
 > 8. Check buttons: Are button labels visible? Blank rectangles = broken button pattern.
 >
+> **Screenshot timeout**: If `browser_take_screenshot` hangs for more than 10 seconds (can happen with continuous WebGL animations), cancel and proceed with code review instead. Do not let a screenshot hang block the entire QA phase.
+>
+> **Note on iterate screenshots**: The iterate-client uses `canvas.toDataURL()` which returns blank/black images when Phaser uses WebGL with `preserveDrawingBuffer: false`. Always prefer Playwright MCP viewport screenshots (`browser_take_screenshot`) over iterate screenshots for visual review.
+>
 > Without MCP (fallback):
-> 1. Read the iterate screenshots from `output/iterate/shot-*.png`
-> 2. Assess visual quality from those screenshots
+> 1. Read the iterate screenshots from `output/iterate/shot-*.png` (may be black if WebGL — this is expected)
+> 2. Fall back to code review: read scene files and assess visual correctness from the code
 >
 > **Return your results in this exact format (text only, no images):**
 > ```
@@ -232,7 +236,7 @@ Mark task 1 as `in_progress`.
    4. Then install the browser binary: `npx playwright install chromium`
    5. Verify success; if it fails, warn and continue (build verification still works, but runtime/iterate checks will be skipped)
 8. **Verify template scripts exist** — The template ships with `scripts/verify-runtime.mjs`, `scripts/iterate-client.js`, and `scripts/example-actions.json`. Confirm they are present. The `verify` and `iterate` npm scripts are already in `package.json` from the template.
-9. Start the dev server in the background with `npm run dev` and confirm it responds. Keep it running throughout the pipeline. Note the port number — pass it to `scripts/verify-runtime.mjs` via the `PORT` env variable in subsequent runs.
+9. **Start the dev server** — Before running `npm run dev`, check if the configured port (in `vite.config.js`) is already in use: `lsof -i :<port> -t`. If occupied, update `vite.config.js` to use the next available port (try 3001, 3002, etc.). Then start the dev server in the background and confirm it responds. Keep it running throughout the pipeline. Note the actual port number — pass it to `scripts/verify-runtime.mjs` via the `PORT` env variable in subsequent runs.
 
 **Subagent — game implementation:**
 
