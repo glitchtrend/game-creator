@@ -18,6 +18,12 @@ export const Events = {
   // Particles
   PARTICLES_EMIT: 'particles:emit',
 
+  // Visual effects
+  SCREEN_SHAKE: 'screen:shake',
+  SCREEN_FLASH: 'screen:flash',
+  FLOAT_TEXT: 'float:text',
+  ENGINE_TRAIL: 'engine:trail',
+
   // Audio (used by /add-audio)
   AUDIO_INIT: 'audio:init',
   MUSIC_MENU: 'music:menu',

@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
-import { GAME, SHIP, ASTEROID, STARS, COLORS, SAFE_ZONE, PX, TRANSITION } from '../core/Constants.js';
+import { GAME, SHIP, ASTEROID, STARS, COLORS, SAFE_ZONE, PX, TRANSITION, EFFECTS } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 import { gameState } from '../core/GameState.js';
 import { renderPixelArt, renderSpriteSheet } from '../core/PixelRenderer.js';
 import { Ship } from '../entities/Ship.js';
 import { Asteroid, createAsteroidTextures } from '../entities/Asteroid.js';
 import { ScoreSystem } from '../systems/ScoreSystem.js';
+import { VisualEffects } from '../systems/VisualEffects.js';
 import { EXPLOSION_FRAMES, EXPLOSION_PALETTE } from '../sprites/explosion.js';
 import { STAR_TILES, NEBULA_VARIANTS, TILE_PALETTE } from '../sprites/tiles.js';
 
@@ -76,6 +77,9 @@ export class GameScene extends Phaser.Scene {
 
     // --- Score system ---
     this.scoreSystem = new ScoreSystem();
+
+    // --- Visual effects system (particles, shake, flash, floating text) ---
+    this.visualEffects = new VisualEffects(this);
 
     // --- Spawn timer ---
     this.spawnTimer = 0;
@@ -192,7 +196,7 @@ export class GameScene extends Phaser.Scene {
       const a = children[i];
       if (a.active && !a.scored && a.y > GAME.HEIGHT + a.asteroidRadius) {
         a.scored = true;
-        eventBus.emit(Events.ASTEROID_PASSED);
+        eventBus.emit(Events.ASTEROID_PASSED, { x: a.x, y: GAME.HEIGHT });
       }
     }
   }
@@ -207,18 +211,27 @@ export class GameScene extends Phaser.Scene {
     // Play explosion animation at collision point
     this.spawnExplosion(shipSprite.x, shipSprite.y);
 
+    // Emit events — VisualEffects system handles particles, shake, and flash
     eventBus.emit(Events.SHIP_HIT, {
       x: shipSprite.x,
       y: shipSprite.y,
     });
     eventBus.emit(Events.GAME_OVER, { score: gameState.score });
 
-    // Brief camera shake on death
-    this.cameras.main.shake(200, 0.015);
+    // --- Slow-mo death sequence ---
+    this.time.timeScale = EFFECTS.SLOWMO_SCALE;
 
-    // Short delay then transition to game over
-    this.time.delayedCall(600, () => {
-      this.scene.start('GameOverScene');
+    // Restore time scale after slow-mo period
+    this.time.delayedCall(EFFECTS.SLOWMO_DURATION * EFFECTS.SLOWMO_SCALE, () => {
+      this.time.timeScale = 1;
+    });
+
+    // Fade out then transition to game over scene
+    this.time.delayedCall(EFFECTS.DEATH_DELAY, () => {
+      this.cameras.main.fadeOut(TRANSITION.FADE_DURATION, 0, 0, 0);
+      this.cameras.main.once('camerafadeoutcomplete', () => {
+        this.scene.start('GameOverScene');
+      });
     });
   }
 
@@ -337,6 +350,12 @@ export class GameScene extends Phaser.Scene {
       this.scoreSystem.destroy();
       this.scoreSystem = null;
     }
+    if (this.visualEffects) {
+      this.visualEffects.destroy();
+      this.visualEffects = null;
+    }
+    // Ensure time scale is restored on scene exit
+    this.time.timeScale = 1;
     eventBus.off(Events.GAME_RESTART, this._onGameRestart);
     this.input.off('pointerdown', this._onPointerDown);
     this.input.off('pointerup', this._onPointerUp);

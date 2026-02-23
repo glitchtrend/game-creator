@@ -38,3 +38,44 @@
 - **Physics bodies**: Ship hitbox set to 70% of display size with centered offset. Asteroid hitbox set to circular 70% of radius for forgiving collision.
 - **Background layers**: Gradient (-100) -> pixel star tiles (-95, scattered 40% density, alpha 0.4-0.8) -> nebula wisps (-92, 15-25 scattered, alpha 0.15-0.35) -> scrolling dot stars (-90) -> entities (default) -> explosion (50)
 - **No raw fillCircle/generateTexture calls remain** in entity constructors — all replaced with PixelRenderer
+
+## Step 2: Design
+- **Visual audit scores** (before/after):
+  - Background & Atmosphere: 4/5 (unchanged — already strong)
+  - Color Palette: 4/5 (unchanged — cohesive DARK theme)
+  - Animations & Tweens: 2 -> 4/5 (added ship tilt, title bounce, score count-up, button entrance)
+  - Particle Effects: 1 -> 4/5 (added engine trail, death burst, asteroid debris, score sparkles)
+  - Screen Transitions: 3 -> 5/5 (added slow-mo death, screen flash, fade-out before scene switch)
+  - Typography: 3 -> 4/5 (floating "+1" score text, "NEW BEST!" indicator, hint text)
+  - Game Feel / Juice: 2 -> 5/5 (screen shake, screen flash, slow-mo, ship tilt, floating text, particles everywhere)
+  - Game Over: 3 -> 5/5 (title drop-bounce entrance, score count-up, button slide-in with glow, ambient floating particles, "NEW BEST!" pulse)
+
+- **New effects added**:
+  - **Engine trail particles** — orange/gold particles stream from ship exhaust, throttled to ~20 emissions/sec for performance
+  - **Ship tilt** — ship rotates toward movement direction (~11 degrees), smooth lerp interpolation
+  - **Floating score text** — gold "+1" floats up and fades at the asteroid's exit position when scored
+  - **Score sparkle particles** — 5 gold particles burst at score location
+  - **Asteroid debris particles** — 6 rock-colored particles burst when asteroid exits screen bottom
+  - **Death explosion burst** — 16 multi-colored particles (orange, gold, red, white) at collision point
+  - **Screen shake** — 300ms, intensity 0.02, triggered via SCREEN_SHAKE event on death
+  - **Screen flash** — 250ms white flash on death via SCREEN_FLASH event
+  - **Slow-mo death** — time scale drops to 0.3 for 500ms, then restores before fade-out transition
+  - **Smooth death transition** — fade-out (350ms) instead of hard cut to GameOverScene
+  - **Title drop-bounce** — "GAME OVER" drops in with Bounce.easeOut ease (600ms)
+  - **Score count-up** — score counts from 0 to final value over 800ms with pulse at end
+  - **Button slide-in** — "PLAY AGAIN" slides up with Back.easeOut after 600ms delay
+  - **Button hover glow** — purple glow effect appears behind button on hover
+  - **"NEW BEST!" indicator** — pulsing gold text when current score equals best score
+  - **Ambient game over particles** — 20 floating particles drift upward on game over screen
+  - **Hint text** — "or press SPACE" fades in below the button
+
+- **New files created**:
+  - `src/systems/VisualEffects.js` — centralized particle and screen effect system, all EventBus-driven
+
+- **New Constants sections**: PARTICLES (engine trail, debris, death burst, score sparkle), EFFECTS (shake, flash, slow-mo, float text, ship tilt), GAMEOVER_UI (animation timings, button glow, ambient particles)
+
+- **New Events**: `screen:shake`, `screen:flash`, `float:text`, `engine:trail`
+
+- **Files modified**: Constants.js, EventBus.js, GameScene.js, GameOverScene.js, Ship.js, ScoreSystem.js
+
+- **No gameplay changes**: Physics, scoring, collision, spawn timing, and input all untouched. All changes are purely visual/additive.

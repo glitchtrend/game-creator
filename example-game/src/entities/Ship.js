@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SHIP, GAME, COLORS } from '../core/Constants.js';
+import { SHIP, GAME, COLORS, EFFECTS } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 import { renderSpriteSheet } from '../core/PixelRenderer.js';
 import { SHIP_FRAMES, SHIP_PALETTE } from '../sprites/ship.js';
@@ -51,6 +51,7 @@ export class Ship {
   update(left, right, delta) {
     const body = this.sprite.body;
     const speed = SHIP.SPEED;
+    const dt = delta / 1000;
 
     // Horizontal movement only
     if (left && !right) {
@@ -74,6 +75,25 @@ export class Ship {
 
     // No vertical velocity for ship
     body.setVelocityY(0);
+
+    // --- Ship tilt toward movement direction ---
+    const tiltCfg = EFFECTS.SHIP_TILT;
+    let targetAngle = 0;
+    if (body.velocity.x < 0) {
+      targetAngle = -tiltCfg.MAX_ANGLE;
+    } else if (body.velocity.x > 0) {
+      targetAngle = tiltCfg.MAX_ANGLE;
+    }
+    // Smooth interpolation toward target angle
+    const lerpFactor = 1 - Math.exp(-tiltCfg.LERP_SPEED * dt);
+    this.sprite.rotation = this.sprite.rotation + (targetAngle - this.sprite.rotation) * lerpFactor;
+
+    // --- Engine trail particles ---
+    // Emit trail from bottom-center of ship
+    eventBus.emit(Events.ENGINE_TRAIL, {
+      x: this.sprite.x,
+      y: this.sprite.y + SHIP.HEIGHT * 0.45,
+    });
   }
 
   getPosition() {
