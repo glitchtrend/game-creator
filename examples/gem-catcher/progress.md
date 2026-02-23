@@ -86,6 +86,58 @@
 - `src/scenes/GameOverScene.js` -- score count-up, NEW BEST indicator, title animation, ambient stars
 - `src/systems/EffectsSystem.js` -- new file with particle/text/shooting star utilities
 
+## Step 3: Audio
+- **Engine**: Strudel (`@strudel/web`) for BGM, Web Audio API for SFX
+- **Already in package.json**: `@strudel/web: ^1.3.0` -- no install needed
+
+### BGM Patterns (Strudel)
+- **Gameplay**: Upbeat magical night-sky theme at ~130 cpm. Square lead with twinkling arpeggios, sine counter-melody in upper register, triangle bass, light drums (bd/sd/hh), and a very quiet shimmer arp texture. Key: E minor / G major.
+- **Game Over**: Somber descending melody at ~60 cpm. Triangle lead, sine minor chord pad (Am), sub bass. Slow(3) modifier for breathing room.
+
+### SFX (Web Audio API -- one-shot)
+- **Gem catch** (`gemCatchSfx`): Bright ascending two-tone chime (E5 -> B5, square wave)
+- **Skull hit** (`skullHitSfx`): Dark low thud (C2 area, square wave, 800Hz LPF)
+- **Life lost** (`lifeLostSfx`): Descending alarm (G4 -> E4 -> C4 -> A3 -> F3, square wave)
+- **Difficulty up** (`difficultyUpSfx`): Ascending level-up fanfare (C4 -> E4 -> G4 -> C5 -> E5, square wave)
+- **Button click** (`clickSfx`): Short sine pop (C5)
+
+### Event-to-Audio Mappings
+| Event | Audio Action |
+|-------|-------------|
+| `AUDIO_INIT` | `initStrudel()` |
+| `MUSIC_GAMEPLAY` | Gameplay BGM loop |
+| `MUSIC_GAMEOVER` | Game Over BGM loop |
+| `MUSIC_STOP` | `hush()` -- stops all Strudel patterns |
+| `GEM_CAUGHT` | `gemCatchSfx()` |
+| `SKULL_CAUGHT` | `skullHitSfx()` |
+| `LIFE_LOST` | `lifeLostSfx()` |
+| `DIFFICULTY_UP` | `difficultyUpSfx()` |
+| `AUDIO_TOGGLE_MUTE` | Toggle `gameState.isMuted`, stop BGM if muting |
+
+### Mute System
+- `gameState.isMuted` checked before every BGM play and SFX call
+- **M key**: Toggles mute on both GameScene and GameOverScene
+- **Speaker icon button**: Bottom-right corner on both scenes (speaker/muted emoji)
+- **localStorage persistence**: Mute preference saved as `gem-catcher-muted`
+- `AUDIO_TOGGLE_MUTE` event added to EventBus
+
+### Scene Wiring
+- **GameScene**: First input (pointer or keyboard) emits `AUDIO_INIT` + `MUSIC_GAMEPLAY`. Game over emits `MUSIC_STOP`.
+- **GameOverScene**: `create()` emits `MUSIC_GAMEOVER`. Restart emits `MUSIC_STOP` + click SFX.
+- **main.js**: Imports and calls `initAudioBridge()` before game creation.
+
+### Files Created
+- `src/audio/AudioManager.js` -- Strudel init/playMusic/stopMusic with mute check and 100ms hush-to-play delay
+- `src/audio/music.js` -- `gameplayBGM()` and `gameOverTheme()` using explicit `stack/note/s` imports
+- `src/audio/sfx.js` -- 5 SFX functions using Web Audio API (oscillator + gain + filter)
+- `src/audio/AudioBridge.js` -- Wires EventBus events to audio, handles mute toggle + localStorage
+
+### Files Modified
+- `src/core/EventBus.js` -- Added `AUDIO_TOGGLE_MUTE` event
+- `src/main.js` -- Import/init AudioBridge, added `muted` to render_game_to_text
+- `src/scenes/GameScene.js` -- Audio init on first input, MUSIC_GAMEPLAY start, MUSIC_STOP on game over, M key mute, mute button
+- `src/scenes/GameOverScene.js` -- MUSIC_GAMEOVER on create, MUSIC_STOP on restart, click SFX on button, M key mute, mute button
+
 ## Decisions / Known Issues
 - No global gravity in physics config; falling objects use setVelocityY() directly
 - Player basket has allowGravity=false
