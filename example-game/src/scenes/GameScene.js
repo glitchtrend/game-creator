@@ -2,9 +2,12 @@ import Phaser from 'phaser';
 import { GAME, SHIP, ASTEROID, STARS, COLORS, SAFE_ZONE, PX, TRANSITION } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 import { gameState } from '../core/GameState.js';
+import { renderPixelArt, renderSpriteSheet } from '../core/PixelRenderer.js';
 import { Ship } from '../entities/Ship.js';
-import { Asteroid, createAsteroidTexture } from '../entities/Asteroid.js';
+import { Asteroid, createAsteroidTextures } from '../entities/Asteroid.js';
 import { ScoreSystem } from '../systems/ScoreSystem.js';
+import { EXPLOSION_FRAMES, EXPLOSION_PALETTE } from '../sprites/explosion.js';
+import { STAR_TILES, NEBULA_VARIANTS, TILE_PALETTE } from '../sprites/tiles.js';
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -17,25 +20,31 @@ export class GameScene extends Phaser.Scene {
     // --- Background: space gradient ---
     this.drawSpaceBackground();
 
-    // --- Scrolling stars ---
+    // --- Pixel art star tiles scattered over the gradient ---
+    this.createPixelStarfield();
+
+    // --- Nebula decorations ---
+    this.createNebulaDecorations();
+
+    // --- Scrolling parallax stars (small circle dots for motion effect) ---
     this.stars = [];
-    this.createStarfield();
+    this.createScrollingStars();
 
-    // --- Generate asteroid textures (multiple variants for visual variety) ---
-    this.asteroidTextureKeys = [];
-    for (let i = 0; i < 5; i++) {
-      const key = `asteroid_${i}`;
-      // Destroy old texture if it exists (restart-safe)
-      if (this.textures.exists(key)) {
-        this.textures.remove(key);
-      }
-      createAsteroidTexture(this, key);
-      this.asteroidTextureKeys.push(key);
-    }
+    // --- Generate pixel art asteroid textures ---
+    this.asteroidTextureKeys = createAsteroidTextures(this);
 
-    // --- Generate ship texture (restart-safe) ---
-    if (this.textures.exists('ship_tex')) {
-      this.textures.remove('ship_tex');
+    // --- Generate explosion spritesheet ---
+    const explosionGridSize = 8;
+    const explosionScale = Math.max(2, Math.round((ASTEROID.MAX_RADIUS * 2) / explosionGridSize));
+    renderSpriteSheet(this, EXPLOSION_FRAMES, EXPLOSION_PALETTE, 'explosion-sheet', explosionScale);
+
+    if (!this.anims.exists('explosion-anim')) {
+      this.anims.create({
+        key: 'explosion-anim',
+        frames: this.anims.generateFrameNumbers('explosion-sheet', { start: 0, end: 2 }),
+        frameRate: 10,
+        repeat: 0,
+      });
     }
 
     // --- Ship (player) ---
@@ -118,8 +127,8 @@ export class GameScene extends Phaser.Scene {
   update(time, delta) {
     if (gameState.gameOver) return;
 
-    // --- Scroll stars ---
-    this.updateStars(delta);
+    // --- Scroll parallax stars ---
+    this.updateScrollingStars(delta);
 
     // --- Merge keyboard + touch input ---
     const left = this.cursors.left.isDown || this.wasd.left.isDown || this.touchLeft;
@@ -195,6 +204,9 @@ export class GameScene extends Phaser.Scene {
     gameState.gameOver = true;
     asteroid.deactivate();
 
+    // Play explosion animation at collision point
+    this.spawnExplosion(shipSprite.x, shipSprite.y);
+
     eventBus.emit(Events.SHIP_HIT, {
       x: shipSprite.x,
       y: shipSprite.y,
@@ -207,6 +219,17 @@ export class GameScene extends Phaser.Scene {
     // Short delay then transition to game over
     this.time.delayedCall(600, () => {
       this.scene.start('GameOverScene');
+    });
+  }
+
+  spawnExplosion(x, y) {
+    const boom = this.add.sprite(x, y, 'explosion-sheet', 0);
+    const size = ASTEROID.MAX_RADIUS * 3;
+    boom.setDisplaySize(size, size);
+    boom.setDepth(50);
+    boom.play('explosion-anim');
+    boom.once('animationcomplete', () => {
+      boom.destroy();
     });
   }
 
@@ -230,7 +253,58 @@ export class GameScene extends Phaser.Scene {
     bg.setDepth(-100);
   }
 
-  createStarfield() {
+  createPixelStarfield() {
+    // Render star tile textures
+    const tileGridSize = 16;
+    const tileScale = Math.max(2, Math.round((GAME.WIDTH * 0.04) / tileGridSize));
+    const tileSize = tileGridSize * tileScale;
+
+    for (let i = 0; i < STAR_TILES.length; i++) {
+      renderPixelArt(this, STAR_TILES[i], TILE_PALETTE, `star-tile-${i}`, tileScale);
+    }
+
+    // Scatter star cluster tiles across the background
+    // Use a grid with random placement — not every cell gets a tile
+    for (let y = 0; y < GAME.HEIGHT; y += tileSize * 2) {
+      for (let x = 0; x < GAME.WIDTH; x += tileSize * 2) {
+        // 40% chance of placing a star tile in each cell
+        if (Math.random() < 0.4) {
+          const variant = Math.floor(Math.random() * STAR_TILES.length);
+          const offsetX = Math.random() * tileSize;
+          const offsetY = Math.random() * tileSize;
+          const tile = this.add.image(x + offsetX, y + offsetY, `star-tile-${variant}`);
+          tile.setDepth(-95);
+          tile.setAlpha(0.4 + Math.random() * 0.4);
+        }
+      }
+    }
+  }
+
+  createNebulaDecorations() {
+    const nebulaGridSize = 8;
+    const nebulaScale = Math.max(2, Math.round((GAME.WIDTH * 0.03) / nebulaGridSize));
+
+    for (let i = 0; i < NEBULA_VARIANTS.length; i++) {
+      renderPixelArt(this, NEBULA_VARIANTS[i], TILE_PALETTE, `nebula-${i}`, nebulaScale);
+    }
+
+    // Scatter 15-25 nebula wisps across the screen
+    const count = 15 + Math.floor(Math.random() * 11);
+    for (let i = 0; i < count; i++) {
+      const nx = Phaser.Math.Between(0, GAME.WIDTH);
+      const ny = Phaser.Math.Between(0, GAME.HEIGHT);
+      const variant = Math.floor(Math.random() * NEBULA_VARIANTS.length);
+      const neb = this.add.image(nx, ny, `nebula-${variant}`);
+      neb.setDepth(-92);
+      neb.setAlpha(0.15 + Math.random() * 0.2);
+      // Slight random scale variation for organic feel
+      const s = 0.7 + Math.random() * 0.8;
+      neb.setScale(s);
+    }
+  }
+
+  createScrollingStars() {
+    // Small moving dots for parallax motion feel (on top of static pixel tiles)
     for (let i = 0; i < STARS.COUNT; i++) {
       const x = Phaser.Math.Between(0, GAME.WIDTH);
       const y = Phaser.Math.Between(0, GAME.HEIGHT);
@@ -244,7 +318,7 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  updateStars(delta) {
+  updateScrollingStars(delta) {
     const dt = delta / 1000;
     for (let i = 0; i < this.stars.length; i++) {
       const s = this.stars[i];

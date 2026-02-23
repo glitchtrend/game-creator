@@ -23,3 +23,18 @@
 - isMuted added to GameState for future audio integration
 - No title screen — boots directly into gameplay per conventions
 - No in-game score HUD — Play.fun widget handles display
+
+## Step 1.5: Assets
+- **Palette**: DARK (space-themed) with 16 colors: dark outline, shadow, red accent, gold highlight, ship blue, cockpit cyan, engine orange, white, purple (nebula), rock browns (3 shades), gray-blue metal, bright orange/yellow (explosion)
+- **Sprites created**:
+  - `src/sprites/palette.js` — DARK palette (16 colors, index 0 = transparent)
+  - `src/sprites/ship.js` — 16x16 spaceship, 2 frames (engine flicker: normal glow + bright glow). Pointed nose, widening body, side fins, cockpit window, rear engine exhaust
+  - `src/sprites/asteroids.js` — 16x16 asteroid rocks, 4 variants (round boulder, tall angular, wide flat, small irregular). Each has craters (dark/light spots) and jagged edges
+  - `src/sprites/explosion.js` — 8x8 explosion effect, 3 frames (small burst, medium fireball, fading smoke). Plays on ship-asteroid collision
+  - `src/sprites/tiles.js` — 16x16 star cluster tiles (3 variants: sparse/dense/faint), 8x8 nebula decorations (2 variants: purple wisp, blue wisp)
+- **Renderer**: `src/core/PixelRenderer.js` — `renderPixelArt()` for static textures, `renderSpriteSheet()` for animated spritesheets
+- **Dimension changes**: Sprite scale is dynamically computed from Constants values (SHIP.WIDTH/HEIGHT, ASTEROID.MAX_RADIUS) so no Constants changes were needed. Ship uses `setDisplaySize(SHIP.WIDTH, SHIP.HEIGHT)`. Asteroids use `setDisplaySize(radius*2, radius*2)`.
+- **Animations**: Ship has `ship-engine` animation (2 frames, 8fps, looping). Explosion has `explosion-anim` (3 frames, 10fps, plays once on collision).
+- **Physics bodies**: Ship hitbox set to 70% of display size with centered offset. Asteroid hitbox set to circular 70% of radius for forgiving collision.
+- **Background layers**: Gradient (-100) -> pixel star tiles (-95, scattered 40% density, alpha 0.4-0.8) -> nebula wisps (-92, 15-25 scattered, alpha 0.15-0.35) -> scrolling dot stars (-90) -> entities (default) -> explosion (50)
+- **No raw fillCircle/generateTexture calls remain** in entity constructors — all replaced with PixelRenderer

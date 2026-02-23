@@ -1,57 +1,51 @@
 import Phaser from 'phaser';
 import { SHIP, GAME, COLORS } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
+import { renderSpriteSheet } from '../core/PixelRenderer.js';
+import { SHIP_FRAMES, SHIP_PALETTE } from '../sprites/ship.js';
 
 export class Ship {
   constructor(scene) {
     this.scene = scene;
 
-    // Draw the ship shape procedurally
-    const gfx = scene.add.graphics();
-    this.drawShip(gfx);
-    gfx.generateTexture('ship_tex', Math.ceil(SHIP.WIDTH), Math.ceil(SHIP.HEIGHT));
-    gfx.destroy();
+    // Determine pixel scale so the rendered sprite fills the SHIP dimensions.
+    // The sprite grid is 16x16. We pick a scale that makes the rendered size
+    // match the larger of SHIP.WIDTH or SHIP.HEIGHT, then let Phaser
+    // setDisplaySize handle the final fit.
+    const gridSize = 16;
+    const desiredSize = Math.max(SHIP.WIDTH, SHIP.HEIGHT);
+    const pixelScale = Math.max(2, Math.round(desiredSize / gridSize));
 
-    // Create sprite from generated texture
-    this.sprite = scene.physics.add.sprite(SHIP.START_X, SHIP.START_Y, 'ship_tex');
+    // Render the spritesheet (engine flicker animation)
+    renderSpriteSheet(scene, SHIP_FRAMES, SHIP_PALETTE, 'ship-sheet', pixelScale);
+
+    // Create animation for engine flicker
+    if (!scene.anims.exists('ship-engine')) {
+      scene.anims.create({
+        key: 'ship-engine',
+        frames: scene.anims.generateFrameNumbers('ship-sheet', { start: 0, end: 1 }),
+        frameRate: 8,
+        repeat: -1,
+      });
+    }
+
+    // Create sprite from spritesheet
+    this.sprite = scene.physics.add.sprite(SHIP.START_X, SHIP.START_Y, 'ship-sheet', 0);
     this.sprite.setDisplaySize(SHIP.WIDTH, SHIP.HEIGHT);
     this.sprite.body.setCollideWorldBounds(true);
     // No gravity for the ship — it stays at the bottom
     this.sprite.body.setAllowGravity(false);
-    // Shrink hitbox slightly for forgiving collision
-    this.sprite.body.setSize(
-      this.sprite.width * 0.7,
-      this.sprite.height * 0.7
+    // Shrink hitbox slightly for forgiving collision (70% of display size)
+    const hitW = SHIP.WIDTH * 0.7;
+    const hitH = SHIP.HEIGHT * 0.7;
+    this.sprite.body.setSize(hitW, hitH);
+    this.sprite.body.setOffset(
+      (this.sprite.width - hitW) / 2,
+      (this.sprite.height - hitH) / 2
     );
-  }
 
-  drawShip(g) {
-    const w = Math.ceil(SHIP.WIDTH);
-    const h = Math.ceil(SHIP.HEIGHT);
-    const cx = w / 2;
-
-    // Main body (triangle-ish shape)
-    g.fillStyle(SHIP.COLOR);
-    g.beginPath();
-    g.moveTo(cx, 0);                    // nose
-    g.lineTo(w * 0.15, h * 0.85);       // bottom-left
-    g.lineTo(w * 0.35, h * 0.7);        // inner-left
-    g.lineTo(w * 0.65, h * 0.7);        // inner-right
-    g.lineTo(w * 0.85, h * 0.85);       // bottom-right
-    g.closePath();
-    g.fillPath();
-
-    // Cockpit
-    g.fillStyle(COLORS.SHIP_COCKPIT);
-    g.fillCircle(cx, h * 0.35, w * 0.1);
-
-    // Engine glow
-    g.fillStyle(COLORS.SHIP_ENGINE);
-    g.fillTriangle(
-      cx - w * 0.1, h * 0.75,
-      cx + w * 0.1, h * 0.75,
-      cx, h
-    );
+    // Play engine flicker animation
+    this.sprite.play('ship-engine');
   }
 
   update(left, right, delta) {
@@ -91,6 +85,7 @@ export class Ship {
     this.sprite.body.setVelocity(0, 0);
     this.sprite.setActive(true);
     this.sprite.setVisible(true);
+    this.sprite.play('ship-engine');
   }
 
   destroy() {
