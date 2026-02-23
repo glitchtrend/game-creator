@@ -179,6 +179,17 @@ export const PALETTE = {
 
 When creating sprites for a game, match the archetype to the entity type. Grid sizes vary by archetype — from 8x8 for tiny pickups to 32x48 for personality characters. The default scale is 3 (each pixel becomes 3x3 on screen).
 
+### Design Philosophy: Push the Pose
+
+Before choosing an archetype, consider what each entity represents thematically:
+
+- **Real people** → Always use the Personality Character archetype. Exaggerate their most recognizable feature until it's almost a caricature. Recognition is everything.
+- **Companies/brands** → Incorporate logo shapes into the sprite. Use brand colors as the primary palette. Consider anthropomorphizing the logo (add limbs, face, expressions).
+- **Game objects** → Must be instantly recognizable real-world objects, never abstract shapes. A collectible representing "creative output" could be a painting, a polaroid, a film reel — not a generic diamond or spark.
+- **Opponents** → Each must be visually distinct. Different silhouettes, color palettes, and proportions. If they represent specific entities (rival companies, other people), build that identity into the sprite.
+
+When in doubt, make it MORE recognizable, MORE exaggerated, MORE character-driven. We dial back, never up.
+
 ### Personality Character (Bobblehead)
 
 For games featuring real people or named personalities (Karpathy, Altman, Amodei, etc.). Recognition IS the meme hook — the character must dominate the screen.
