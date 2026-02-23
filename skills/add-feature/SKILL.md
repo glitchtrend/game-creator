@@ -1,6 +1,8 @@
 ---
 name: add-feature
 description: Add a new gameplay feature to your game — just describe what you want
+argument-hint: "[feature-description]"
+disable-model-invocation: true
 ---
 
 # Add Feature

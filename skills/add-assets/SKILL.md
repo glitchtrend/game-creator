@@ -1,6 +1,8 @@
 ---
 name: add-assets
 description: Replace geometric shapes with pixel art sprites — recognizable characters, enemies, and items with optional animation
+argument-hint: "[path-to-game]"
+disable-model-invocation: true
 ---
 
 # Add Assets
