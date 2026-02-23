@@ -1,6 +1,6 @@
 ---
+name: game-creator
 description: Autonomous end-to-end game creation pipeline. Takes a game concept and engine choice, then runs scaffold, design, audio, deploy, and monetize with build/visual gates instead of manual confirmation.
-capabilities: ["scaffold-game", "visual-design", "audio-integration", "deploy", "monetize", "autonomous-pipeline"]
 ---
 
 # Game Creator Agent

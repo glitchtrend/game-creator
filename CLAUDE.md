@@ -10,6 +10,7 @@ This is **game-creator**, the game studio for the agent internet. It provides sk
 .claude-plugin/
   plugin.json              # Plugin manifest (name, version, author)
   marketplace.json         # Marketplace metadata (owner: OpusGameLabs)
+settings.json              # Default settings (activates game-creator agent)
 skills/
   phaser/SKILL.md          # 2D game patterns (Phaser 3, scene-based, multi-file)
   threejs-game/SKILL.md    # 3D game patterns (Three.js, event-driven)
@@ -38,9 +39,10 @@ scripts/
 submodules/
   playdotfun/              # Git submodule: github.com/OpusGameLabs/skills
 agents/
-  game-reviewer.md         # Code review agent
   game-creator.md          # Autonomous game creation pipeline with build/visual gates
-  game-deploy.md           # Deployment automation
+  game-deploy.md           # Deployment automation (preloads game-deploy skill)
+  game-qa-runner.md        # Test runner + autofix (preloads game-qa, game-architecture)
+  game-reviewer.md         # Code review agent (preloads game-architecture)
 examples/
   flappy-bird/             # Complete example game (see below)
 ```
@@ -133,7 +135,7 @@ SFX fires on `BIRD_FLAP`, `SCORE_CHANGED`, `BIRD_DIED` via AudioBridge listeners
 
 **Add a new user-invocable skill** (slash command): Create `skills/<name>/SKILL.md` with YAML frontmatter (`name`, `description`, `argument-hint`, `disable-model-invocation: true`). Body contains the prompt instructions.
 
-**Sync to plugin cache**: After editing skill files, copy to your agent's plugin cache directory (e.g. `~/.claude/plugins/cache/local-plugins/game-creator/1.2.0/` for Claude Code).
+**Sync to plugin cache**: After editing skill files, copy to your agent's plugin cache directory (e.g. `~/.claude/plugins/cache/local-plugins/game-creator/1.3.0/` for Claude Code).
 
 **Run the example**: `cd examples/flappy-bird && npm run dev` starts on port 3000.
 

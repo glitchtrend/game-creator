@@ -1,6 +1,7 @@
 ---
 name: game-qa
 description: Game QA testing with Playwright — visual regression, gameplay verification, performance, and accessibility for browser games
+user-invocable: false
 ---
 
 # Game QA with Playwright

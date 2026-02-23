@@ -123,12 +123,12 @@ All commands are prefixed with `game-creator:` when installed as a plugin (e.g.,
 
 ## Agents
 
-| Agent | Description |
-|-------|-------------|
-| `game-creator` | Autonomous end-to-end pipeline with build/visual gates (no user confirmation between steps) |
-| `game-reviewer` | Reviews codebases for architecture compliance, performance, and monetization readiness |
-| `game-qa-runner` | Runs Playwright test suites, diagnoses failures, fixes code, and re-runs until green |
-| `game-deploy` | Deploys games to GitHub Pages, Vercel, or itch.io with pre/post validation |
+| Agent | Description | Preloaded Skills |
+|-------|-------------|------------------|
+| `game-creator` | Autonomous end-to-end pipeline with build/visual gates (no user confirmation between steps) | — (delegates to subagents) |
+| `game-reviewer` | Reviews codebases for architecture compliance, performance, and monetization readiness | `game-architecture` |
+| `game-qa-runner` | Runs Playwright test suites, diagnoses failures, fixes code, and re-runs until green | `game-qa`, `game-architecture` |
+| `game-deploy` | Deploys games to GitHub Pages, Vercel, or itch.io with pre/post validation | `game-deploy` |
 
 ## Examples
 

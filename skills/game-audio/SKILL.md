@@ -1,6 +1,7 @@
 ---
 name: game-audio
 description: Game audio engineer using Strudel.cc for background music and Web Audio API for sound effects in browser games. Use when adding music or SFX to a game.
+user-invocable: false
 ---
 
 # Game Audio Engineer (Strudel + Web Audio)
