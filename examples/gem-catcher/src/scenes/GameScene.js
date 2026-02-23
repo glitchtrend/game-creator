@@ -9,6 +9,7 @@ import { Skull } from '../entities/Skull.js';
 import { ScoreSystem } from '../systems/ScoreSystem.js';
 import { emitGemCatchBurst, emitSkullHitBurst, emitDifficultyUpShower, showFloatingText, createShootingStar } from '../systems/EffectsSystem.js';
 import { SKY_BASE, SKY_VAR1, SKY_VAR2, STAR_CLUSTER, BRIGHT_STAR, NEBULA_PUFF, TILE_PALETTE } from '../sprites/tiles.js';
+import { clickSfx } from '../audio/sfx.js';
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -59,12 +60,22 @@ export class GameScene extends Phaser.Scene {
     this.livesTexts = [];
     this.createLivesDisplay();
 
+    // --- Audio init tracking ---
+    this._audioInitialized = false;
+
     // --- Keyboard input ---
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();
       this.wasd = this.input.keyboard.addKeys({
         left: Phaser.Input.Keyboard.KeyCodes.A,
         right: Phaser.Input.Keyboard.KeyCodes.D,
+      });
+
+      // M key = mute toggle
+      this.input.keyboard.on('keydown-M', () => {
+        this._initAudioOnce();
+        eventBus.emit(Events.AUDIO_TOGGLE_MUTE);
+        this._updateMuteButton();
       });
     }
 
@@ -74,6 +85,9 @@ export class GameScene extends Phaser.Scene {
 
     // Tap-zone input: left half = move left, right half = move right
     this.input.on('pointerdown', (pointer) => {
+      // Init audio on first user interaction (browser autoplay policy)
+      this._initAudioOnce();
+
       if (pointer.x < GAME.WIDTH / 2) {
         this.touchLeft = true;
         this.touchRight = false;
@@ -98,6 +112,9 @@ export class GameScene extends Phaser.Scene {
       this.touchLeft = false;
       this.touchRight = false;
     });
+
+    // --- Mute button (speaker icon, bottom-right) ---
+    this._createMuteButton();
 
     // --- Basket idle bob animation ---
     this.tweens.add({
@@ -131,6 +148,11 @@ export class GameScene extends Phaser.Scene {
     const right = (this.cursors && this.cursors.right.isDown) ||
                   (this.wasd && this.wasd.right.isDown) ||
                   this.touchRight;
+
+    // Init audio on first keyboard input (browser autoplay policy)
+    if ((left || right) && !this._audioInitialized) {
+      this._initAudioOnce();
+    }
 
     this.player.update(left, right);
 
@@ -339,6 +361,7 @@ export class GameScene extends Phaser.Scene {
     this.player.sprite.body.setVelocity(0, 0);
 
     eventBus.emit(Events.GAME_OVER, { score: gameState.score });
+    eventBus.emit(Events.MUSIC_STOP);
 
     // Slow-mo effect on final death: 0.3x speed for 500ms before transitioning
     this.time.timeScale = EFFECTS.SLOWMO_SCALE;
@@ -483,6 +506,47 @@ export class GameScene extends Phaser.Scene {
     for (const star of this._parallaxFar) {
       star.x = star._origX - (this._parallaxTime * BACKGROUND.PARALLAX_SPEED_FAR) % GAME.WIDTH;
       if (star.x < -20) star.x += GAME.WIDTH + 40;
+    }
+  }
+
+  // --- Audio helpers ---
+
+  _initAudioOnce() {
+    if (this._audioInitialized) return;
+    this._audioInitialized = true;
+    eventBus.emit(Events.AUDIO_INIT);
+    // Start gameplay BGM after init
+    if (!gameState.isMuted) {
+      eventBus.emit(Events.MUSIC_GAMEPLAY);
+    }
+  }
+
+  // --- Mute button (speaker icon, bottom-right corner) ---
+
+  _createMuteButton() {
+    const btnSize = Math.round(GAME.HEIGHT * UI.BODY_RATIO * 1.4);
+    const padding = 12 * PX;
+    const x = GAME.WIDTH - padding;
+    const y = GAME.HEIGHT - padding;
+
+    this._muteBtn = this.add.text(x, y, gameState.isMuted ? '\uD83D\uDD07' : '\uD83D\uDD0A', {
+      fontSize: btnSize + 'px',
+      fontFamily: UI.FONT,
+    }).setOrigin(1, 1).setDepth(200).setInteractive({ useHandCursor: true });
+
+    this._muteBtn.on('pointerdown', (pointer, localX, localY, event) => {
+      // Prevent this click from triggering touch movement
+      event.stopPropagation();
+      this._initAudioOnce();
+      clickSfx();
+      eventBus.emit(Events.AUDIO_TOGGLE_MUTE);
+      this._updateMuteButton();
+    });
+  }
+
+  _updateMuteButton() {
+    if (this._muteBtn) {
+      this._muteBtn.setText(gameState.isMuted ? '\uD83D\uDD07' : '\uD83D\uDD0A');
     }
   }
 }

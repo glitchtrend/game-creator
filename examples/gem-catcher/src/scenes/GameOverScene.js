@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { GAME, COLORS, UI, TRANSITION, SAFE_ZONE, EFFECTS, PX } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 import { gameState } from '../core/GameState.js';
+import { clickSfx } from '../audio/sfx.js';
 
 export class GameOverScene extends Phaser.Scene {
   constructor() {
@@ -18,6 +19,9 @@ export class GameOverScene extends Phaser.Scene {
     // Usable area below Play.fun widget bar
     const safeTop = SAFE_ZONE.TOP;
     const usableH = h - safeTop;
+
+    // --- Game Over BGM ---
+    eventBus.emit(Events.MUSIC_GAMEOVER);
 
     // --- Gradient background ---
     this.drawGradient(w, h, COLORS.BG_TOP, COLORS.BG_BOTTOM);
@@ -154,7 +158,16 @@ export class GameOverScene extends Phaser.Scene {
     // --- Keyboard shortcut ---
     if (this.input.keyboard) {
       this.input.keyboard.once('keydown-SPACE', () => this.restartGame());
+
+      // M key = mute toggle
+      this.input.keyboard.on('keydown-M', () => {
+        eventBus.emit(Events.AUDIO_TOGGLE_MUTE);
+        this._updateMuteButton();
+      });
     }
+
+    // --- Mute button (speaker icon, bottom-right) ---
+    this._createMuteButton();
 
     // --- Fade in ---
     this.cameras.main.fadeIn(TRANSITION.FADE_DURATION, 0, 0, 0);
@@ -164,6 +177,8 @@ export class GameOverScene extends Phaser.Scene {
     if (this._transitioning) return;
     this._transitioning = true;
 
+    clickSfx();
+    eventBus.emit(Events.MUSIC_STOP);
     gameState.reset();
     eventBus.emit(Events.GAME_RESTART);
     this.cameras.main.fadeOut(TRANSITION.FADE_DURATION, 0, 0, 0);
@@ -251,6 +266,7 @@ export class GameOverScene extends Phaser.Scene {
     });
 
     container.on('pointerdown', () => {
+      clickSfx();
       this.fillBtn(bg, btnW, btnH, radius, COLORS.BTN_PRIMARY_PRESS);
       container.setScale(0.95);
     });
@@ -267,5 +283,31 @@ export class GameOverScene extends Phaser.Scene {
     gfx.clear();
     gfx.fillStyle(color, 1);
     gfx.fillRoundedRect(-w / 2, -h / 2, w, h, radius);
+  }
+
+  // --- Mute button (speaker icon, bottom-right corner) ---
+
+  _createMuteButton() {
+    const btnSize = Math.round(GAME.HEIGHT * UI.BODY_RATIO * 1.4);
+    const padding = 12 * PX;
+    const x = GAME.WIDTH - padding;
+    const y = GAME.HEIGHT - padding;
+
+    this._muteBtn = this.add.text(x, y, gameState.isMuted ? '\uD83D\uDD07' : '\uD83D\uDD0A', {
+      fontSize: btnSize + 'px',
+      fontFamily: UI.FONT,
+    }).setOrigin(1, 1).setDepth(200).setInteractive({ useHandCursor: true });
+
+    this._muteBtn.on('pointerdown', () => {
+      clickSfx();
+      eventBus.emit(Events.AUDIO_TOGGLE_MUTE);
+      this._updateMuteButton();
+    });
+  }
+
+  _updateMuteButton() {
+    if (this._muteBtn) {
+      this._muteBtn.setText(gameState.isMuted ? '\uD83D\uDD07' : '\uD83D\uDD0A');
+    }
   }
 }

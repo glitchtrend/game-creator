@@ -24,6 +24,7 @@ export const Events = {
 
   // Audio (used by /add-audio)
   AUDIO_INIT: 'audio:init',
+  AUDIO_TOGGLE_MUTE: 'audio:toggleMute',
   MUSIC_MENU: 'music:menu',
   MUSIC_GAMEPLAY: 'music:gameplay',
   MUSIC_GAMEOVER: 'music:gameover',
