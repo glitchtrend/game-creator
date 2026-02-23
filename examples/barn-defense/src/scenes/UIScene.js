@@ -5,7 +5,7 @@
 // =============================================================================
 
 import Phaser from 'phaser';
-import { GAME, COLORS, UI, SPEED, TRANSITION, EFFECTS } from '../core/Constants.js';
+import { GAME, COLORS, UI, SPEED, TRANSITION, EFFECTS, PX } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 import { gameState } from '../core/GameState.js';
 import { TowerPanel } from '../ui/TowerPanel.js';
@@ -30,7 +30,7 @@ export class UIScene extends Phaser.Scene {
       ? LEVELS[gameState.currentLevel].name
       : 'Unknown';
 
-    this.levelText = this.add.text(10, 10, `Level ${gameState.currentLevel + 1}: ${levelName}`, {
+    this.levelText = this.add.text(10 * PX, 10 * PX, `Level ${gameState.currentLevel + 1}: ${levelName}`, {
       fontSize: UI.FONT_SIZE_MEDIUM,
       fontFamily: UI.FONT_FAMILY,
       color: COLORS.UI_GOLD_TEXT,
@@ -40,7 +40,7 @@ export class UIScene extends Phaser.Scene {
     });
 
     // Corn display (with text shadow)
-    this.cornText = this.add.text(GAME.WIDTH - 200, 10, `Corn: ${gameState.corn}`, {
+    this.cornText = this.add.text(GAME.WIDTH - 200 * PX, 10 * PX, `Corn: ${gameState.corn}`, {
       fontSize: UI.FONT_SIZE_MEDIUM,
       fontFamily: UI.FONT_FAMILY,
       color: COLORS.UI_GOLD_TEXT,
@@ -48,10 +48,10 @@ export class UIScene extends Phaser.Scene {
       stroke: EFFECTS.TEXT_STROKE_COLOR,
       strokeThickness: EFFECTS.TEXT_STROKE_THICKNESS,
     });
-    this.cornBaseX = GAME.WIDTH - 200;
+    this.cornBaseX = GAME.WIDTH - 200 * PX;
 
     // Lives display (with text shadow)
-    this.livesText = this.add.text(GAME.WIDTH - 80, 10, `Lives: ${gameState.lives}`, {
+    this.livesText = this.add.text(GAME.WIDTH - 80 * PX, 10 * PX, `Lives: ${gameState.lives}`, {
       fontSize: UI.FONT_SIZE_MEDIUM,
       fontFamily: UI.FONT_FAMILY,
       color: COLORS.UI_TEXT,
@@ -59,17 +59,17 @@ export class UIScene extends Phaser.Scene {
       stroke: EFFECTS.TEXT_STROKE_COLOR,
       strokeThickness: EFFECTS.TEXT_STROKE_THICKNESS,
     });
-    this.livesBaseX = GAME.WIDTH - 80;
+    this.livesBaseX = GAME.WIDTH - 80 * PX;
 
     // Speed button
     this.speedBtn = this.add.rectangle(
-      GAME.WIDTH - 40, UI.PANEL_Y - 22,
-      60, 24,
+      GAME.WIDTH - 40 * PX, UI.PANEL_Y - 22 * PX,
+      60 * PX, 24 * PX,
       COLORS.UI_BUTTON, 0.8
     );
     this.speedBtn.setInteractive({ useHandCursor: true });
     this.speedBtnText = this.add.text(
-      GAME.WIDTH - 40, UI.PANEL_Y - 22,
+      GAME.WIDTH - 40 * PX, UI.PANEL_Y - 22 * PX,
       '1x',
       {
         fontSize: UI.FONT_SIZE_SMALL,
@@ -77,7 +77,7 @@ export class UIScene extends Phaser.Scene {
         color: COLORS.UI_TEXT,
         fontStyle: 'bold',
         stroke: EFFECTS.TEXT_STROKE_COLOR,
-        strokeThickness: 1,
+        strokeThickness: Math.round(1 * PX),
       }
     ).setOrigin(0.5);
 

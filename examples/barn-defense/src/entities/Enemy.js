@@ -5,7 +5,7 @@
 // Uses pixel art sprite sheets for visuals.
 // =============================================================================
 
-import { HEALTH_BAR, COLORS, GAME } from '../core/Constants.js';
+import { HEALTH_BAR, COLORS, GAME, PX } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 import { gameState } from '../core/GameState.js';
 
@@ -89,7 +89,7 @@ export class Enemy {
     const dy = target.y - this.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
-    if (dist < 2) {
+    if (dist < 2 * PX) {
       // Reached waypoint
       this.x = target.x;
       this.y = target.y;

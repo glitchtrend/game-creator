@@ -4,6 +4,7 @@
 // =============================================================================
 
 import { FARM_PALETTE } from './palette.js';
+import { PX } from '../core/Constants.js';
 
 // ---- HAY BALE (8x8) ----
 // Golden square shape, darker cross pattern
@@ -78,9 +79,9 @@ const TRACTOR_BOLT = [
 // ---- Export all projectile sprites ----
 
 export const PROJECTILE_SPRITES = {
-  scarecrow: { pixels: HAY_BALE, palette: FARM_PALETTE, scale: 2 },
-  pitchfork: { pixels: PITCHFORK_PROJ, palette: FARM_PALETTE, scale: 2 },
-  corn_cannon: { pixels: CORN_COB, palette: FARM_PALETTE, scale: 2 },
-  sprinkler: { pixels: WATER_DROP, palette: FARM_PALETTE, scale: 2 },
-  tractor: { pixels: TRACTOR_BOLT, palette: FARM_PALETTE, scale: 2 },
+  scarecrow: { pixels: HAY_BALE, palette: FARM_PALETTE, scale: 2 * PX },
+  pitchfork: { pixels: PITCHFORK_PROJ, palette: FARM_PALETTE, scale: 2 * PX },
+  corn_cannon: { pixels: CORN_COB, palette: FARM_PALETTE, scale: 2 * PX },
+  sprinkler: { pixels: WATER_DROP, palette: FARM_PALETTE, scale: 2 * PX },
+  tractor: { pixels: TRACTOR_BOLT, palette: FARM_PALETTE, scale: 2 * PX },
 };

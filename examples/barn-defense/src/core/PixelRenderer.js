@@ -1,6 +1,7 @@
 // =============================================================================
 // Barn Defense - PixelRenderer
 // Renders 2D pixel matrices to Phaser textures.
+// Canvas dimensions are rounded to integers for proper rendering.
 // =============================================================================
 
 /**
@@ -12,9 +13,13 @@ export function renderPixelArt(scene, pixels, palette, key, scale = 2) {
   const h = pixels.length;
   const w = pixels[0].length;
   const canvas = document.createElement('canvas');
-  canvas.width = w * scale;
-  canvas.height = h * scale;
+  canvas.width = Math.round(w * scale);
+  canvas.height = Math.round(h * scale);
   const ctx = canvas.getContext('2d');
+
+  // Compute per-pixel size to fill canvas exactly
+  const pxW = canvas.width / w;
+  const pxH = canvas.height / h;
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -25,7 +30,12 @@ export function renderPixelArt(scene, pixels, palette, key, scale = 2) {
       const g = (color >> 8) & 0xff;
       const b = color & 0xff;
       ctx.fillStyle = `rgb(${r},${g},${b})`;
-      ctx.fillRect(x * scale, y * scale, scale, scale);
+      // Use floor/ceil to avoid sub-pixel gaps
+      const rx = Math.floor(x * pxW);
+      const ry = Math.floor(y * pxH);
+      const rw = Math.ceil((x + 1) * pxW) - rx;
+      const rh = Math.ceil((y + 1) * pxH) - ry;
+      ctx.fillRect(rx, ry, rw, rh);
     }
   }
 
@@ -40,12 +50,16 @@ export function renderSpriteSheet(scene, frames, palette, key, scale = 2) {
 
   const h = frames[0].length;
   const w = frames[0][0].length;
-  const frameW = w * scale;
-  const frameH = h * scale;
+  const frameW = Math.round(w * scale);
+  const frameH = Math.round(h * scale);
   const canvas = document.createElement('canvas');
   canvas.width = frameW * frames.length;
   canvas.height = frameH;
   const ctx = canvas.getContext('2d');
+
+  // Compute per-pixel size to fill frame exactly
+  const pxW = frameW / w;
+  const pxH = frameH / h;
 
   frames.forEach((pixels, fi) => {
     const offsetX = fi * frameW;
@@ -58,7 +72,11 @@ export function renderSpriteSheet(scene, frames, palette, key, scale = 2) {
         const g = (color >> 8) & 0xff;
         const b = color & 0xff;
         ctx.fillStyle = `rgb(${r},${g},${b})`;
-        ctx.fillRect(offsetX + x * scale, y * scale, scale, scale);
+        const rx = Math.floor(x * pxW);
+        const ry = Math.floor(y * pxH);
+        const rw = Math.ceil((x + 1) * pxW) - rx;
+        const rh = Math.ceil((y + 1) * pxH) - ry;
+        ctx.fillRect(offsetX + rx, ry, rw, rh);
       }
     }
   });

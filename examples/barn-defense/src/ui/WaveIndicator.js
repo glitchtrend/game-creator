@@ -3,7 +3,7 @@
 // Shows current wave progress and provides "Start Wave" button.
 // =============================================================================
 
-import { GAME, COLORS, UI, EFFECTS } from '../core/Constants.js';
+import { GAME, COLORS, UI, EFFECTS, PX } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 import { gameState } from '../core/GameState.js';
 
@@ -55,7 +55,7 @@ export class WaveIndicator {
 
   create() {
     // Wave text - positioned in top bar area (with text stroke)
-    this.waveText = this.scene.add.text(GAME.WIDTH / 2, 10, `Wave 0/${gameState.totalWaves}`, {
+    this.waveText = this.scene.add.text(GAME.WIDTH / 2, 10 * PX, `Wave 0/${gameState.totalWaves}`, {
       fontSize: UI.FONT_SIZE_MEDIUM,
       fontFamily: UI.FONT_FAMILY,
       color: COLORS.UI_TEXT,
@@ -66,15 +66,15 @@ export class WaveIndicator {
 
     // Start Wave button
     this.startBtn = this.scene.add.rectangle(
-      GAME.WIDTH / 2, UI.PANEL_Y - 22,
-      140, 28,
+      GAME.WIDTH / 2, UI.PANEL_Y - 22 * PX,
+      140 * PX, 28 * PX,
       COLORS.BUTTON, 0.9
     );
-    this.startBtn.setStrokeStyle(1, COLORS.BUTTON_HOVER);
+    this.startBtn.setStrokeStyle(1 * PX, COLORS.BUTTON_HOVER);
     this.startBtn.setInteractive({ useHandCursor: true });
 
     this.startBtnText = this.scene.add.text(
-      GAME.WIDTH / 2, UI.PANEL_Y - 22,
+      GAME.WIDTH / 2, UI.PANEL_Y - 22 * PX,
       'Start Wave',
       {
         fontSize: UI.FONT_SIZE_MEDIUM,

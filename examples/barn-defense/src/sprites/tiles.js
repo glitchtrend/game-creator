@@ -1,10 +1,14 @@
 // =============================================================================
 // Barn Defense - Tile Sprites
-// Background tiles (16x16 grid at scale 2.5 = 40px to match TILE_SIZE).
+// Background tiles (16x16 grid at scale 2.5*PX to match TILE_SIZE).
 // Also includes decorative elements.
+//
+// Original: 16px * 2.5 = 40px = TILE_SIZE
+// Scaled:   16px * 2.5 * PX = 40 * PX = GAME.TILE_SIZE
 // =============================================================================
 
 import { FARM_PALETTE } from './palette.js';
+import { PX } from '../core/Constants.js';
 
 // ---- GRASS TILE 1 (16x16) ----
 // Base green with subtle darker speckles
@@ -215,20 +219,22 @@ const ROCK = [
 ];
 
 // ---- Export tile data ----
+// Tile scale: 16px * 2.5 * PX  =>  produces TILE_SIZE-pixel textures
+// Decoration scale: original * PX
 
 export const TILE_SPRITES = {
-  grass1: { pixels: GRASS_TILE_1, palette: FARM_PALETTE, scale: 2.5 },
-  grass2: { pixels: GRASS_TILE_2, palette: FARM_PALETTE, scale: 2.5 },
-  grass3: { pixels: GRASS_TILE_3, palette: FARM_PALETTE, scale: 2.5 },
-  path1: { pixels: PATH_TILE_1, palette: FARM_PALETTE, scale: 2.5 },
-  path2: { pixels: PATH_TILE_2, palette: FARM_PALETTE, scale: 2.5 },
-  water: { pixels: WATER_TILE, palette: FARM_PALETTE, scale: 2.5 },
-  entry: { pixels: ENTRY_TILE, palette: FARM_PALETTE, scale: 2.5 },
+  grass1: { pixels: GRASS_TILE_1, palette: FARM_PALETTE, scale: 2.5 * PX },
+  grass2: { pixels: GRASS_TILE_2, palette: FARM_PALETTE, scale: 2.5 * PX },
+  grass3: { pixels: GRASS_TILE_3, palette: FARM_PALETTE, scale: 2.5 * PX },
+  path1: { pixels: PATH_TILE_1, palette: FARM_PALETTE, scale: 2.5 * PX },
+  path2: { pixels: PATH_TILE_2, palette: FARM_PALETTE, scale: 2.5 * PX },
+  water: { pixels: WATER_TILE, palette: FARM_PALETTE, scale: 2.5 * PX },
+  entry: { pixels: ENTRY_TILE, palette: FARM_PALETTE, scale: 2.5 * PX },
 };
 
 export const DECORATION_SPRITES = {
-  hayStack: { pixels: HAY_STACK, palette: FARM_PALETTE, scale: 2 },
-  fencePost: { pixels: FENCE_POST, palette: FARM_PALETTE, scale: 2 },
-  flowerPatch: { pixels: FLOWER_PATCH, palette: FARM_PALETTE, scale: 2 },
-  rock: { pixels: ROCK, palette: FARM_PALETTE, scale: 2 },
+  hayStack: { pixels: HAY_STACK, palette: FARM_PALETTE, scale: 2 * PX },
+  fencePost: { pixels: FENCE_POST, palette: FARM_PALETTE, scale: 2 * PX },
+  flowerPatch: { pixels: FLOWER_PATCH, palette: FARM_PALETTE, scale: 2 * PX },
+  rock: { pixels: ROCK, palette: FARM_PALETTE, scale: 2 * PX },
 };

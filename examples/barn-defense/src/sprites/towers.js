@@ -4,6 +4,7 @@
 // =============================================================================
 
 import { FARM_PALETTE } from './palette.js';
+import { PX } from '../core/Constants.js';
 
 // ---- SCARECROW (16x16) ----
 // Brown body, straw hat brim, stick arms, button eyes, stuffed chest
@@ -118,9 +119,9 @@ const TRACTOR = [
 // ---- Export all tower sprites ----
 
 export const TOWER_SPRITES = {
-  scarecrow: { pixels: SCARECROW, palette: FARM_PALETTE, scale: 2 },
-  pitchfork: { pixels: PITCHFORK_TOWER, palette: FARM_PALETTE, scale: 2 },
-  corn_cannon: { pixels: CORN_CANNON, palette: FARM_PALETTE, scale: 2 },
-  sprinkler: { pixels: SPRINKLER, palette: FARM_PALETTE, scale: 2 },
-  tractor: { pixels: TRACTOR, palette: FARM_PALETTE, scale: 2 },
+  scarecrow: { pixels: SCARECROW, palette: FARM_PALETTE, scale: 2 * PX },
+  pitchfork: { pixels: PITCHFORK_TOWER, palette: FARM_PALETTE, scale: 2 * PX },
+  corn_cannon: { pixels: CORN_CANNON, palette: FARM_PALETTE, scale: 2 * PX },
+  sprinkler: { pixels: SPRINKLER, palette: FARM_PALETTE, scale: 2 * PX },
+  tractor: { pixels: TRACTOR, palette: FARM_PALETTE, scale: 2 * PX },
 };

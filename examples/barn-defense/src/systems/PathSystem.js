@@ -5,7 +5,7 @@
 // Uses pixel art tiles and decorations.
 // =============================================================================
 
-import { GAME, TILE, COLORS } from '../core/Constants.js';
+import { GAME, TILE, COLORS, PX } from '../core/Constants.js';
 
 // Seeded random for deterministic tile/decoration placement
 function mulberry32(seed) {
@@ -127,24 +127,24 @@ export class PathSystem {
 
     // Barn body
     g.fillStyle(COLORS.BARN_COLOR, 1);
-    g.fillRect(x + 2, y + S * 0.3, S - 4, S * 0.7 - 2);
+    g.fillRect(x + 2 * PX, y + S * 0.3, S - 4 * PX, S * 0.7 - 2 * PX);
 
     // Barn roof
     g.fillStyle(COLORS.BARN_ROOF, 1);
     g.fillTriangle(
       x, y + S * 0.3,
-      x + S / 2, y + 2,
+      x + S / 2, y + 2 * PX,
       x + S, y + S * 0.3
     );
 
     // Door
     g.fillStyle(0x663322, 1);
-    g.fillRect(x + S / 2 - 5, y + S * 0.5, 10, S * 0.5 - 2);
+    g.fillRect(x + S / 2 - 5 * PX, y + S * 0.5, 10 * PX, S * 0.5 - 2 * PX);
 
     // X on door
-    g.lineStyle(1, 0x442211, 1);
-    g.lineBetween(x + S / 2 - 4, y + S * 0.52, x + S / 2 + 4, y + S - 4);
-    g.lineBetween(x + S / 2 + 4, y + S * 0.52, x + S / 2 - 4, y + S - 4);
+    g.lineStyle(1 * PX, 0x442211, 1);
+    g.lineBetween(x + S / 2 - 4 * PX, y + S * 0.52, x + S / 2 + 4 * PX, y + S - 4 * PX);
+    g.lineBetween(x + S / 2 + 4 * PX, y + S * 0.52, x + S / 2 - 4 * PX, y + S - 4 * PX);
   }
 
   drawPathMarkers() {
@@ -156,7 +156,7 @@ export class PathSystem {
     g.fillStyle(0x887744, 0.3);
     for (const path of paths) {
       for (let i = 0; i < path.length; i += 3) {
-        g.fillCircle(path[i].x, path[i].y, 2);
+        g.fillCircle(path[i].x, path[i].y, 2 * PX);
       }
     }
   }

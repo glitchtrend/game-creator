@@ -5,7 +5,7 @@
 // Uses pixel art textures for visuals.
 // =============================================================================
 
-import { GAME, TOWERS, COLORS, EFFECTS } from '../core/Constants.js';
+import { GAME, TOWERS, COLORS, EFFECTS, PX } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 import { gameState } from '../core/GameState.js';
 
@@ -41,10 +41,10 @@ export class Tower {
 
     // Level indicator (with text stroke for readability)
     this.levelText = scene.add.text(
-      GAME.TILE_SIZE / 2 - 6, -GAME.TILE_SIZE / 2 + 1,
+      GAME.TILE_SIZE / 2 - 6 * PX, -GAME.TILE_SIZE / 2 + 1 * PX,
       '1',
       {
-        fontSize: '10px',
+        fontSize: Math.round(10 * PX) + 'px',
         fontFamily: 'monospace',
         color: '#ffffff',
         stroke: EFFECTS.TEXT_STROKE_COLOR,
@@ -55,7 +55,7 @@ export class Tower {
 
     // Range indicator (hidden by default)
     this.rangeCircle = scene.add.circle(0, 0, this.range, COLORS.RANGE_FILL, COLORS.RANGE_ALPHA);
-    this.rangeCircle.setStrokeStyle(1, COLORS.RANGE_STROKE, COLORS.RANGE_STROKE_ALPHA);
+    this.rangeCircle.setStrokeStyle(1 * PX, COLORS.RANGE_STROKE, COLORS.RANGE_STROKE_ALPHA);
     this.rangeCircle.setVisible(false);
     this.container.add(this.rangeCircle);
     this.container.sendToBack(this.rangeCircle);

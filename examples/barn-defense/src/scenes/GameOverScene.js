@@ -4,7 +4,7 @@
 // =============================================================================
 
 import Phaser from 'phaser';
-import { GAME, COLORS, UI, TRANSITION, PARTICLES, EFFECTS } from '../core/Constants.js';
+import { GAME, COLORS, UI, TRANSITION, PARTICLES, EFFECTS, PX } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 import { gameState } from '../core/GameState.js';
 import { LEVELS } from '../systems/MapSystem.js';
@@ -32,16 +32,16 @@ export class GameOverScene extends Phaser.Scene {
     this.createEmbers();
 
     // Game Over title with shake effect
-    const title = this.add.text(cx, cy - 120, 'GAME OVER', {
+    const title = this.add.text(cx, cy - 120 * PX, 'GAME OVER', {
       fontSize: UI.FONT_SIZE_TITLE,
       fontFamily: UI.FONT_FAMILY,
       color: COLORS.UI_RED_TEXT,
       fontStyle: 'bold',
       stroke: EFFECTS.TEXT_STROKE_COLOR,
-      strokeThickness: 4,
+      strokeThickness: Math.round(4 * PX),
       shadow: {
-        offsetX: 2,
-        offsetY: 2,
+        offsetX: Math.round(2 * PX),
+        offsetY: Math.round(2 * PX),
         color: EFFECTS.TEXT_SHADOW_COLOR,
         blur: EFFECTS.TEXT_SHADOW_BLUR,
         fill: true,
@@ -66,12 +66,12 @@ export class GameOverScene extends Phaser.Scene {
     const fadeCfg = EFFECTS.STATS_FADE_IN;
     const stats = [];
 
-    const msgText = this.add.text(cx, cy - 60, 'The barn has been overrun!', {
+    const msgText = this.add.text(cx, cy - 60 * PX, 'The barn has been overrun!', {
       fontSize: UI.FONT_SIZE_MEDIUM,
       fontFamily: UI.FONT_FAMILY,
       color: COLORS.UI_TEXT,
       stroke: EFFECTS.TEXT_STROKE_COLOR,
-      strokeThickness: 1,
+      strokeThickness: Math.round(1 * PX),
     }).setOrigin(0.5).setAlpha(0);
     stats.push(msgText);
 
@@ -80,30 +80,30 @@ export class GameOverScene extends Phaser.Scene {
       ? LEVELS[gameState.currentLevel].name
       : 'Unknown';
 
-    const stat1 = this.add.text(cx, cy - 20, `Level: ${gameState.currentLevel + 1} - ${levelName}`, {
+    const stat1 = this.add.text(cx, cy - 20 * PX, `Level: ${gameState.currentLevel + 1} - ${levelName}`, {
       fontSize: UI.FONT_SIZE_MEDIUM,
       fontFamily: UI.FONT_FAMILY,
       color: COLORS.UI_GOLD_TEXT,
       stroke: EFFECTS.TEXT_STROKE_COLOR,
-      strokeThickness: 1,
+      strokeThickness: Math.round(1 * PX),
     }).setOrigin(0.5).setAlpha(0);
     stats.push(stat1);
 
-    const stat2 = this.add.text(cx, cy + 10, `Wave reached: ${gameState.currentWave}/${gameState.totalWaves}`, {
+    const stat2 = this.add.text(cx, cy + 10 * PX, `Wave reached: ${gameState.currentWave}/${gameState.totalWaves}`, {
       fontSize: UI.FONT_SIZE_MEDIUM,
       fontFamily: UI.FONT_FAMILY,
       color: COLORS.UI_TEXT,
       stroke: EFFECTS.TEXT_STROKE_COLOR,
-      strokeThickness: 1,
+      strokeThickness: Math.round(1 * PX),
     }).setOrigin(0.5).setAlpha(0);
     stats.push(stat2);
 
-    const stat3 = this.add.text(cx, cy + 40, `Towers placed: ${gameState.towersPlaced.length}`, {
+    const stat3 = this.add.text(cx, cy + 40 * PX, `Towers placed: ${gameState.towersPlaced.length}`, {
       fontSize: UI.FONT_SIZE_MEDIUM,
       fontFamily: UI.FONT_FAMILY,
       color: COLORS.UI_TEXT,
       stroke: EFFECTS.TEXT_STROKE_COLOR,
-      strokeThickness: 1,
+      strokeThickness: Math.round(1 * PX),
     }).setOrigin(0.5).setAlpha(0);
     stats.push(stat3);
 
@@ -119,11 +119,11 @@ export class GameOverScene extends Phaser.Scene {
     });
 
     // Retry button with hover scale
-    const retryBtn = this.add.rectangle(cx, cy + 110, 140, 44, COLORS.BUTTON, 0.9);
-    retryBtn.setStrokeStyle(2, COLORS.BUTTON_HOVER);
+    const retryBtn = this.add.rectangle(cx, cy + 110 * PX, 140 * PX, 44 * PX, COLORS.BUTTON, 0.9);
+    retryBtn.setStrokeStyle(2 * PX, COLORS.BUTTON_HOVER);
     retryBtn.setInteractive({ useHandCursor: true });
 
-    const retryText = this.add.text(cx, cy + 110, 'RETRY', {
+    const retryText = this.add.text(cx, cy + 110 * PX, 'RETRY', {
       fontSize: UI.FONT_SIZE_LARGE,
       fontFamily: UI.FONT_FAMILY,
       color: COLORS.UI_TEXT,
@@ -164,7 +164,7 @@ export class GameOverScene extends Phaser.Scene {
 
     for (let i = 0; i < cfg.COUNT; i++) {
       const x = Math.random() * GAME.WIDTH;
-      const startY = -20 - Math.random() * 100;
+      const startY = -20 * PX - Math.random() * 100 * PX;
       const size = cfg.MIN_SIZE + Math.random() * (cfg.MAX_SIZE - cfg.MIN_SIZE);
       const color = cfg.COLORS[Math.floor(Math.random() * cfg.COLORS.length)];
       const duration = cfg.MIN_DURATION + Math.random() * (cfg.MAX_DURATION - cfg.MIN_DURATION);
@@ -174,14 +174,14 @@ export class GameOverScene extends Phaser.Scene {
 
       this.tweens.add({
         targets: ember,
-        y: GAME.HEIGHT + 20,
-        x: x + (Math.random() - 0.5) * 100,
+        y: GAME.HEIGHT + 20 * PX,
+        x: x + (Math.random() - 0.5) * 100 * PX,
         alpha: 0,
         duration: duration,
         delay: Math.random() * 2000,
         repeat: -1,
         onRepeat: () => {
-          ember.setPosition(Math.random() * GAME.WIDTH, -20);
+          ember.setPosition(Math.random() * GAME.WIDTH, -20 * PX);
           ember.setAlpha(0.6);
         },
         ease: 'Sine.easeIn',

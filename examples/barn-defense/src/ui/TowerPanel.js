@@ -4,7 +4,7 @@
 // Shows tower icons with costs and names.
 // =============================================================================
 
-import { GAME, TOWERS, TOWER_ORDER, COLORS, UI, EFFECTS } from '../core/Constants.js';
+import { GAME, TOWERS, TOWER_ORDER, COLORS, UI, EFFECTS, PX } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 import { gameState } from '../core/GameState.js';
 
@@ -51,11 +51,11 @@ export class TowerPanel {
       UI.PANEL_WIDTH, UI.PANEL_HEIGHT,
       UI.TOP_BAR_BG, UI.TOP_BAR_ALPHA
     );
-    this.panelBg.setStrokeStyle(2, COLORS.UI_PANEL_BORDER);
+    this.panelBg.setStrokeStyle(2 * PX, COLORS.UI_PANEL_BORDER);
 
     // Tower buttons
-    const startX = 60;
-    const spacing = 140;
+    const startX = 60 * PX;
+    const spacing = 140 * PX;
 
     TOWER_ORDER.forEach((typeKey, index) => {
       const config = TOWERS[typeKey];
@@ -64,33 +64,33 @@ export class TowerPanel {
 
       // Affordable glow behind button (subtle pulsing)
       const glowCfg = EFFECTS.TOWER_GLOW;
-      const glow = this.scene.add.rectangle(x, y, 134, 56, glowCfg.COLOR, 0);
+      const glow = this.scene.add.rectangle(x, y, 134 * PX, 56 * PX, glowCfg.COLOR, 0);
       glow.setDepth(0);
 
       // Button background
-      const btn = this.scene.add.rectangle(x, y, 130, 52, COLORS.UI_BUTTON, 0.8);
-      btn.setStrokeStyle(1, COLORS.UI_PANEL_BORDER);
+      const btn = this.scene.add.rectangle(x, y, 130 * PX, 52 * PX, COLORS.UI_BUTTON, 0.8);
+      btn.setStrokeStyle(1 * PX, COLORS.UI_PANEL_BORDER);
       btn.setInteractive({ useHandCursor: true });
 
       // Tower icon (small colored square)
-      const icon = this.scene.add.rectangle(x - 45, y, 24, 24, config.color);
+      const icon = this.scene.add.rectangle(x - 45 * PX, y, 24 * PX, 24 * PX, config.color);
 
       // Tower name (with text stroke)
-      const nameText = this.scene.add.text(x - 28, y - 14, config.name, {
+      const nameText = this.scene.add.text(x - 28 * PX, y - 14 * PX, config.name, {
         fontSize: UI.FONT_SIZE_SMALL,
         fontFamily: UI.FONT_FAMILY,
         color: COLORS.UI_TEXT,
         stroke: EFFECTS.TEXT_STROKE_COLOR,
-        strokeThickness: 1,
+        strokeThickness: Math.round(1 * PX),
       });
 
       // Cost text (with text stroke)
-      const costText = this.scene.add.text(x - 28, y + 2, `${config.cost} corn`, {
+      const costText = this.scene.add.text(x - 28 * PX, y + 2 * PX, `${config.cost} corn`, {
         fontSize: UI.FONT_SIZE_SMALL,
         fontFamily: UI.FONT_FAMILY,
         color: COLORS.UI_GOLD_TEXT,
         stroke: EFFECTS.TEXT_STROKE_COLOR,
-        strokeThickness: 1,
+        strokeThickness: Math.round(1 * PX),
       });
 
       // Hover effects
@@ -142,43 +142,43 @@ export class TowerPanel {
     this.infoContainer.setVisible(false);
 
     // Background
-    const bg = this.scene.add.rectangle(0, 0, 220, 140, UI.TOP_BAR_BG, 0.95);
-    bg.setStrokeStyle(2, COLORS.UI_PANEL_BORDER);
+    const bg = this.scene.add.rectangle(0, 0, 220 * PX, 140 * PX, UI.TOP_BAR_BG, 0.95);
+    bg.setStrokeStyle(2 * PX, COLORS.UI_PANEL_BORDER);
     this.infoContainer.add(bg);
 
     // Title
-    this.infoTitle = this.scene.add.text(-100, -60, '', {
+    this.infoTitle = this.scene.add.text(-100 * PX, -60 * PX, '', {
       fontSize: UI.FONT_SIZE_MEDIUM,
       fontFamily: UI.FONT_FAMILY,
       color: COLORS.UI_TEXT,
       fontStyle: 'bold',
       stroke: EFFECTS.TEXT_STROKE_COLOR,
-      strokeThickness: 1,
+      strokeThickness: Math.round(1 * PX),
     });
     this.infoContainer.add(this.infoTitle);
 
     // Stats
-    this.infoStats = this.scene.add.text(-100, -35, '', {
+    this.infoStats = this.scene.add.text(-100 * PX, -35 * PX, '', {
       fontSize: UI.FONT_SIZE_SMALL,
       fontFamily: UI.FONT_FAMILY,
       color: COLORS.UI_TEXT,
-      lineSpacing: 4,
+      lineSpacing: 4 * PX,
       stroke: EFFECTS.TEXT_STROKE_COLOR,
-      strokeThickness: 1,
+      strokeThickness: Math.round(1 * PX),
     });
     this.infoContainer.add(this.infoStats);
 
     // Upgrade button
-    this.upgradeBtn = this.scene.add.rectangle(-30, 45, 100, 28, COLORS.UI_BUTTON, 0.9);
+    this.upgradeBtn = this.scene.add.rectangle(-30 * PX, 45 * PX, 100 * PX, 28 * PX, COLORS.UI_BUTTON, 0.9);
     this.upgradeBtn.setInteractive({ useHandCursor: true });
     this.infoContainer.add(this.upgradeBtn);
 
-    this.upgradeBtnText = this.scene.add.text(-30, 45, 'Upgrade', {
+    this.upgradeBtnText = this.scene.add.text(-30 * PX, 45 * PX, 'Upgrade', {
       fontSize: UI.FONT_SIZE_SMALL,
       fontFamily: UI.FONT_FAMILY,
       color: COLORS.UI_TEXT,
       stroke: EFFECTS.TEXT_STROKE_COLOR,
-      strokeThickness: 1,
+      strokeThickness: Math.round(1 * PX),
     }).setOrigin(0.5);
     this.infoContainer.add(this.upgradeBtnText);
 
@@ -190,16 +190,16 @@ export class TowerPanel {
     });
 
     // Sell button
-    this.sellBtn = this.scene.add.rectangle(70, 45, 70, 28, 0xaa3333, 0.9);
+    this.sellBtn = this.scene.add.rectangle(70 * PX, 45 * PX, 70 * PX, 28 * PX, 0xaa3333, 0.9);
     this.sellBtn.setInteractive({ useHandCursor: true });
     this.infoContainer.add(this.sellBtn);
 
-    this.sellBtnText = this.scene.add.text(70, 45, 'Sell', {
+    this.sellBtnText = this.scene.add.text(70 * PX, 45 * PX, 'Sell', {
       fontSize: UI.FONT_SIZE_SMALL,
       fontFamily: UI.FONT_FAMILY,
       color: COLORS.UI_TEXT,
       stroke: EFFECTS.TEXT_STROKE_COLOR,
-      strokeThickness: 1,
+      strokeThickness: Math.round(1 * PX),
     }).setOrigin(0.5);
     this.infoContainer.add(this.sellBtnText);
 
@@ -238,10 +238,10 @@ export class TowerPanel {
     for (const button of this.buttons) {
       if (button.typeKey === this.selectedType) {
         button.btn.setFillStyle(COLORS.UI_BUTTON_HOVER, 0.9);
-        button.btn.setStrokeStyle(2, 0xffff00);
+        button.btn.setStrokeStyle(2 * PX, 0xffff00);
       } else {
         button.btn.setFillStyle(COLORS.UI_BUTTON, 0.8);
-        button.btn.setStrokeStyle(1, COLORS.UI_PANEL_BORDER);
+        button.btn.setStrokeStyle(1 * PX, COLORS.UI_PANEL_BORDER);
       }
     }
   }
@@ -271,18 +271,18 @@ export class TowerPanel {
     this.selectedType = null;
     this.updateButtonStates();
 
-    this.infoContainer.setPosition(tower.x, Math.max(tower.y - 100, 100));
+    this.infoContainer.setPosition(tower.x, Math.max(tower.y - 100 * PX, 100 * PX));
     this.infoContainer.setVisible(true);
 
     this.infoTitle.setText(`${tower.config.name} Lv.${tower.level}`);
 
     const stats = [
       `Damage: ${tower.damage}`,
-      `Range: ${tower.range}`,
+      `Range: ${Math.round(tower.range / PX)}`,
       `Fire Rate: ${tower.fireRate}ms`,
     ];
     if (tower.config.splash) {
-      stats.push(`Splash: ${tower.config.splashRadius}px`);
+      stats.push(`Splash: ${Math.round(tower.config.splashRadius / PX)}px`);
     }
     if (tower.config.slowEffect) {
       stats.push(`Slow: ${Math.round((1 - tower.config.slowAmount) * 100)}%`);

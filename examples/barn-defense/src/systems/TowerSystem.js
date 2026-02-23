@@ -3,7 +3,7 @@
 // Manages tower placement, targeting, firing, and upgrades.
 // =============================================================================
 
-import { GAME, TOWERS, TOWER_ORDER, COLORS } from '../core/Constants.js';
+import { GAME, TOWERS, TOWER_ORDER, COLORS, PX } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 import { gameState } from '../core/GameState.js';
 import { Tower } from '../entities/Tower.js';
@@ -103,7 +103,7 @@ export class TowerSystem {
     // Create ghost graphic
     if (!this.ghostGraphic) {
       this.ghostGraphic = this.scene.add.rectangle(
-        0, 0, GAME.TILE_SIZE - 2, GAME.TILE_SIZE - 2,
+        0, 0, GAME.TILE_SIZE - 2 * PX, GAME.TILE_SIZE - 2 * PX,
         COLORS.VALID_PLACEMENT, COLORS.PLACEMENT_ALPHA
       );
     }
@@ -113,7 +113,7 @@ export class TowerSystem {
         0, 0, config.range,
         COLORS.RANGE_FILL, COLORS.RANGE_ALPHA
       );
-      this.ghostRange.setStrokeStyle(1, COLORS.RANGE_STROKE, COLORS.RANGE_STROKE_ALPHA);
+      this.ghostRange.setStrokeStyle(1 * PX, COLORS.RANGE_STROKE, COLORS.RANGE_STROKE_ALPHA);
     } else {
       this.ghostRange.setRadius(config.range);
     }

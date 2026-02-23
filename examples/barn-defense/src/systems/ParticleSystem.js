@@ -5,7 +5,7 @@
 // from entities, everything flows through EventBus.
 // =============================================================================
 
-import { GAME, PARTICLES, EFFECTS, ENEMY_DEATH_COLORS } from '../core/Constants.js';
+import { GAME, PARTICLES, EFFECTS, ENEMY_DEATH_COLORS, PX } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 
 export class ParticleSystem {
@@ -40,7 +40,7 @@ export class ParticleSystem {
     this.onBarnHit = () => {
       // Barn hit particles -- find barn position from map center-right area
       // We use a fixed barn area approximation
-      this.emitBarnHit(GAME.WIDTH - 80, GAME.HEIGHT / 2);
+      this.emitBarnHit(GAME.WIDTH - 80 * PX, GAME.HEIGHT / 2);
     };
     eventBus.on(Events.BARN_HIT, this.onBarnHit);
 
@@ -102,7 +102,7 @@ export class ParticleSystem {
   // =========================================================================
   emitCornEarned(x, y, amount) {
     const cfg = PARTICLES.CORN_EARNED;
-    const text = this.scene.add.text(x, y - 10, `+${amount}`, {
+    const text = this.scene.add.text(x, y - 10 * PX, `+${amount}`, {
       fontSize: cfg.FONT_SIZE,
       fontFamily: 'monospace',
       color: cfg.COLOR,
@@ -113,7 +113,7 @@ export class ParticleSystem {
 
     this.scene.tweens.add({
       targets: text,
-      y: y - 10 - cfg.FLOAT_DISTANCE,
+      y: y - 10 * PX - cfg.FLOAT_DISTANCE,
       alpha: 0,
       duration: cfg.DURATION,
       ease: 'Quad.easeOut',
@@ -128,14 +128,14 @@ export class ParticleSystem {
     const cfg = PARTICLES.PROJECTILE_SPLASH;
 
     // Expanding ring
-    const ring = this.scene.add.circle(x, y, 5, cfg.COLOR, 0.4);
-    ring.setStrokeStyle(2, cfg.COLOR, 0.6);
+    const ring = this.scene.add.circle(x, y, 5 * PX, cfg.COLOR, 0.4);
+    ring.setStrokeStyle(2 * PX, cfg.COLOR, 0.6);
     ring.setDepth(90);
 
     this.scene.tweens.add({
       targets: ring,
-      scaleX: radius / 5,
-      scaleY: radius / 5,
+      scaleX: radius / (5 * PX),
+      scaleY: radius / (5 * PX),
       alpha: 0,
       duration: cfg.DURATION,
       ease: 'Quad.easeOut',
@@ -172,8 +172,8 @@ export class ParticleSystem {
   emitHitSpark(x, y) {
     for (let i = 0; i < 4; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = 30 + Math.random() * 50;
-      const p = this.scene.add.circle(x, y, 2, 0xffffff);
+      const speed = (30 + Math.random() * 50) * PX;
+      const p = this.scene.add.circle(x, y, 2 * PX, 0xffffff);
       p.setDepth(90);
 
       this.scene.tweens.add({
@@ -200,13 +200,13 @@ export class ParticleSystem {
       const dx = Math.cos(angle) * speed;
       const dy = Math.sin(angle) * speed;
 
-      const p = this.scene.add.circle(x, y + 8, cfg.SIZE, cfg.COLOR, 0.7);
+      const p = this.scene.add.circle(x, y + 8 * PX, cfg.SIZE, cfg.COLOR, 0.7);
       p.setDepth(80);
 
       this.scene.tweens.add({
         targets: p,
         x: x + dx * (cfg.DURATION / 1000),
-        y: y + 8 + dy * (cfg.DURATION / 1000) - 15,
+        y: y + 8 * PX + dy * (cfg.DURATION / 1000) - 15 * PX,
         alpha: 0,
         scaleX: 1.5,
         scaleY: 1.5,
@@ -226,8 +226,8 @@ export class ParticleSystem {
     for (let i = 0; i < cfg.COUNT; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = cfg.MIN_SPEED + Math.random() * (cfg.MAX_SPEED - cfg.MIN_SPEED);
-      const px = x + (Math.random() - 0.5) * 40;
-      const py = y + (Math.random() - 0.5) * 40;
+      const px = x + (Math.random() - 0.5) * 40 * PX;
+      const py = y + (Math.random() - 0.5) * 40 * PX;
 
       const p = this.scene.add.circle(px, py, cfg.SIZE, cfg.COLOR, 0.8);
       p.setDepth(100);

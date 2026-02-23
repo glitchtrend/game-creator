@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { FARM_PALETTE } from './palette.js';
+import { PX } from '../core/Constants.js';
 
 // ---- CHICKEN (12x12) ----
 // Small round yellow body, orange beak, tiny red comb, black eye
@@ -214,9 +215,9 @@ const BULL_WALK2 = [
 // ---- Export all enemy sprites ----
 
 export const ENEMY_SPRITES = {
-  chicken: { frames: [CHICKEN_WALK1, CHICKEN_WALK2], palette: FARM_PALETTE, scale: 2, animRate: 6 },
-  pig: { frames: [PIG_WALK1, PIG_WALK2], palette: FARM_PALETTE, scale: 2, animRate: 5 },
-  cow: { frames: [COW_WALK1, COW_WALK2], palette: FARM_PALETTE, scale: 2, animRate: 4 },
-  goat: { frames: [GOAT_WALK1, GOAT_WALK2], palette: FARM_PALETTE, scale: 2, animRate: 5 },
-  bull: { frames: [BULL_WALK1, BULL_WALK2], palette: FARM_PALETTE, scale: 2, animRate: 3 },
+  chicken: { frames: [CHICKEN_WALK1, CHICKEN_WALK2], palette: FARM_PALETTE, scale: 2 * PX, animRate: 6 },
+  pig: { frames: [PIG_WALK1, PIG_WALK2], palette: FARM_PALETTE, scale: 2 * PX, animRate: 5 },
+  cow: { frames: [COW_WALK1, COW_WALK2], palette: FARM_PALETTE, scale: 2 * PX, animRate: 4 },
+  goat: { frames: [GOAT_WALK1, GOAT_WALK2], palette: FARM_PALETTE, scale: 2 * PX, animRate: 5 },
+  bull: { frames: [BULL_WALK1, BULL_WALK2], palette: FARM_PALETTE, scale: 2 * PX, animRate: 3 },
 };

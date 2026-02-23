@@ -4,7 +4,7 @@
 // =============================================================================
 
 import Phaser from 'phaser';
-import { GAME, COLORS, UI, TRANSITION, PARTICLES, EFFECTS } from '../core/Constants.js';
+import { GAME, COLORS, UI, TRANSITION, PARTICLES, EFFECTS, PX } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 import { gameState } from '../core/GameState.js';
 import { LEVELS } from '../systems/MapSystem.js';
@@ -40,16 +40,16 @@ export class LevelCompleteScene extends Phaser.Scene {
     );
 
     // Victory title with pulse
-    const title = this.add.text(cx, cy - 120, 'LEVEL COMPLETE!', {
+    const title = this.add.text(cx, cy - 120 * PX, 'LEVEL COMPLETE!', {
       fontSize: UI.FONT_SIZE_TITLE,
       fontFamily: UI.FONT_FAMILY,
       color: COLORS.UI_GREEN_TEXT,
       fontStyle: 'bold',
       stroke: EFFECTS.TEXT_STROKE_COLOR,
-      strokeThickness: 4,
+      strokeThickness: Math.round(4 * PX),
       shadow: {
-        offsetX: 2,
-        offsetY: 2,
+        offsetX: Math.round(2 * PX),
+        offsetY: Math.round(2 * PX),
         color: EFFECTS.TEXT_SHADOW_COLOR,
         blur: EFFECTS.TEXT_SHADOW_BLUR,
         fill: true,
@@ -68,7 +68,7 @@ export class LevelCompleteScene extends Phaser.Scene {
     });
 
     // Star burst at center
-    this.createStarBurst(cx, cy - 120);
+    this.createStarBurst(cx, cy - 120 * PX);
 
     // Level info -- slides in from left
     const levelName = LEVELS[gameState.currentLevel]
@@ -78,40 +78,40 @@ export class LevelCompleteScene extends Phaser.Scene {
     const slideCfg = EFFECTS.STATS_SLIDE_IN;
     const statsItems = [];
 
-    const levelInfo = this.add.text(cx, cy - 60, `${levelName} - Defended!`, {
+    const levelInfo = this.add.text(cx, cy - 60 * PX, `${levelName} - Defended!`, {
       fontSize: UI.FONT_SIZE_LARGE,
       fontFamily: UI.FONT_FAMILY,
       color: COLORS.UI_GOLD_TEXT,
       stroke: EFFECTS.TEXT_STROKE_COLOR,
-      strokeThickness: 1,
+      strokeThickness: Math.round(1 * PX),
     }).setOrigin(0.5);
     statsItems.push(levelInfo);
 
     // Stats
-    const stat1 = this.add.text(cx, cy - 20, `Waves survived: ${gameState.currentWave}`, {
+    const stat1 = this.add.text(cx, cy - 20 * PX, `Waves survived: ${gameState.currentWave}`, {
       fontSize: UI.FONT_SIZE_MEDIUM,
       fontFamily: UI.FONT_FAMILY,
       color: COLORS.UI_TEXT,
       stroke: EFFECTS.TEXT_STROKE_COLOR,
-      strokeThickness: 1,
+      strokeThickness: Math.round(1 * PX),
     }).setOrigin(0.5);
     statsItems.push(stat1);
 
-    const stat2 = this.add.text(cx, cy + 10, `Corn remaining: ${gameState.corn}`, {
+    const stat2 = this.add.text(cx, cy + 10 * PX, `Corn remaining: ${gameState.corn}`, {
       fontSize: UI.FONT_SIZE_MEDIUM,
       fontFamily: UI.FONT_FAMILY,
       color: COLORS.UI_GOLD_TEXT,
       stroke: EFFECTS.TEXT_STROKE_COLOR,
-      strokeThickness: 1,
+      strokeThickness: Math.round(1 * PX),
     }).setOrigin(0.5);
     statsItems.push(stat2);
 
-    const stat3 = this.add.text(cx, cy + 40, `Lives remaining: ${gameState.lives}`, {
+    const stat3 = this.add.text(cx, cy + 40 * PX, `Lives remaining: ${gameState.lives}`, {
       fontSize: UI.FONT_SIZE_MEDIUM,
       fontFamily: UI.FONT_FAMILY,
       color: COLORS.UI_TEXT,
       stroke: EFFECTS.TEXT_STROKE_COLOR,
-      strokeThickness: 1,
+      strokeThickness: Math.round(1 * PX),
     }).setOrigin(0.5);
     statsItems.push(stat3);
 
@@ -134,11 +134,11 @@ export class LevelCompleteScene extends Phaser.Scene {
     const hasNextLevel = gameState.currentLevel + 1 < LEVELS.length;
 
     if (hasNextLevel) {
-      const nextBtn = this.add.rectangle(cx, cy + 110, 150, 44, COLORS.BUTTON, 0.9);
-      nextBtn.setStrokeStyle(2, COLORS.BUTTON_HOVER);
+      const nextBtn = this.add.rectangle(cx, cy + 110 * PX, 150 * PX, 44 * PX, COLORS.BUTTON, 0.9);
+      nextBtn.setStrokeStyle(2 * PX, COLORS.BUTTON_HOVER);
       nextBtn.setInteractive({ useHandCursor: true });
 
-      const nextText = this.add.text(cx, cy + 110, 'NEXT LEVEL', {
+      const nextText = this.add.text(cx, cy + 110 * PX, 'NEXT LEVEL', {
         fontSize: UI.FONT_SIZE_MEDIUM,
         fontFamily: UI.FONT_FAMILY,
         color: COLORS.UI_TEXT,
@@ -169,11 +169,11 @@ export class LevelCompleteScene extends Phaser.Scene {
       });
       nextBtn.on('pointerdown', () => this.nextLevel());
     } else {
-      const againBtn = this.add.rectangle(cx, cy + 110, 150, 44, COLORS.BUTTON, 0.9);
-      againBtn.setStrokeStyle(2, COLORS.BUTTON_HOVER);
+      const againBtn = this.add.rectangle(cx, cy + 110 * PX, 150 * PX, 44 * PX, COLORS.BUTTON, 0.9);
+      againBtn.setStrokeStyle(2 * PX, COLORS.BUTTON_HOVER);
       againBtn.setInteractive({ useHandCursor: true });
 
-      const againText = this.add.text(cx, cy + 110, 'PLAY AGAIN', {
+      const againText = this.add.text(cx, cy + 110 * PX, 'PLAY AGAIN', {
         fontSize: UI.FONT_SIZE_MEDIUM,
         fontFamily: UI.FONT_FAMILY,
         color: COLORS.UI_TEXT,
@@ -244,7 +244,7 @@ export class LevelCompleteScene extends Phaser.Scene {
 
     for (let i = 0; i < cfg.COUNT; i++) {
       const x = Math.random() * GAME.WIDTH;
-      const y = -20 - Math.random() * 200;
+      const y = -20 * PX - Math.random() * 200 * PX;
       const color = cfg.COLORS[Math.floor(Math.random() * cfg.COLORS.length)];
       const size = cfg.MIN_SIZE + Math.random() * (cfg.MAX_SIZE - cfg.MIN_SIZE);
       const duration = cfg.MIN_DURATION + Math.random() * (cfg.MAX_DURATION - cfg.MIN_DURATION);
@@ -257,15 +257,15 @@ export class LevelCompleteScene extends Phaser.Scene {
 
       this.tweens.add({
         targets: confetti,
-        y: GAME.HEIGHT + 20,
-        x: x + (Math.random() - 0.5) * 200,
+        y: GAME.HEIGHT + 20 * PX,
+        x: x + (Math.random() - 0.5) * 200 * PX,
         angle: (Math.random() - 0.5) * 720,
         alpha: 0,
         duration: duration,
         delay: Math.random() * 1500,
         repeat: -1,
         onRepeat: () => {
-          confetti.setPosition(Math.random() * GAME.WIDTH, -20);
+          confetti.setPosition(Math.random() * GAME.WIDTH, -20 * PX);
           confetti.setAlpha(1);
           confetti.setAngle(0);
         },
