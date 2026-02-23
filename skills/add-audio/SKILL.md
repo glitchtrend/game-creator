@@ -1,6 +1,8 @@
 ---
 name: add-audio
 description: Add music and sound effects to a game using Strudel.cc — background music, gameplay themes, and SFX
+argument-hint: "[path-to-game]"
+disable-model-invocation: true
 ---
 
 # Add Audio

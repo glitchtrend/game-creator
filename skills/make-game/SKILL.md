@@ -1,6 +1,8 @@
 ---
 name: make-game
 description: Full guided pipeline — scaffold, design, audio, deploy, and monetize a game from scratch
+argument-hint: "[2d|3d] [game-name] OR [tweet-url]"
+disable-model-invocation: true
 ---
 
 # Make Game (Full Pipeline)
@@ -31,7 +33,7 @@ Build a complete browser game from scratch, step by step. This command walks you
 **What stays in the main thread:**
 - Step 0: Parse arguments, create todo list
 - Step 1 (infrastructure only): Copy template, npm install, playwright install, start dev server
-- Verification protocol runs (build + runtime + visual review + autofix)
+- Verification protocol orchestration (launch QA subagent, read text result, launch autofix if needed)
 - Step 4 (deploy): Interactive auth requires user back-and-forth
 
 **What goes to subagents** (via `Task` tool):
@@ -44,60 +46,118 @@ Each subagent receives: step instructions, relevant skill name, project path, en
 
 ## Verification Protocol
 
-Run this protocol after **every code-modifying step** (Steps 1, 1.5, 2, 3). It has three phases:
+Run this protocol after **every code-modifying step** (Steps 1, 1.5, 2, 3). It delegates all QA work to a subagent to minimize main-thread context usage.
 
-### Phase 1 — Build Check
+### Playwright MCP Check (once, before first QA run)
 
-```bash
-cd <project-dir> && npm run build
+Before the first QA run (after Step 1 infrastructure setup), check if Playwright MCP tools like `browser_navigate` are available. If not:
+
+1. Run: `claude mcp add playwright npx @playwright/mcp@latest`
+2. Tell the user: "Playwright MCP has been added. Please restart Claude Code for it to take effect, then tell me to continue."
+3. **Wait for user to restart and confirm.** Do not proceed until MCP tools are available.
+
+### QA Subagent
+
+Launch a `Task` subagent with these instructions:
+
+> You are the QA subagent for the game creation pipeline.
+>
+> **Project path**: `<project-dir>`
+> **Dev server port**: `<port>`
+> **Step being verified**: `<step name>`
+>
+> Run these phases in order. Stop early if a phase fails critically (build or runtime).
+>
+> **Phase 1 — Build Check**
+> ```bash
+> cd <project-dir> && npm run build
+> ```
+> If the build fails, report FAIL immediately with the error output.
+>
+> **Phase 2 — Runtime Check**
+> ```bash
+> cd <project-dir> && node scripts/verify-runtime.mjs
+> ```
+> If the runtime check fails, report FAIL immediately with the error details.
+>
+> **Phase 3 — Gameplay Verification**
+> ```bash
+> cd <project-dir> && node scripts/iterate-client.js \
+>   --url http://localhost:<port> \
+>   --actions-file scripts/example-actions.json \
+>   --iterations 3 --screenshot-dir output/iterate
+> ```
+> After running, read the state JSON files (`output/iterate/state-*.json`) and error files (`output/iterate/errors-*.json`):
+> - **Scoring**: At least one state file should show `score > 0`
+> - **Death**: At least one state file should show `mode: "game_over"`
+> - **Errors**: No critical errors in error files
+>
+> Skip this phase if `scripts/iterate-client.js` is not present.
+>
+> **Phase 4 — Architecture Validation**
+> ```bash
+> cd <project-dir> && node scripts/validate-architecture.mjs
+> ```
+> Report any warnings but don't fail on architecture issues alone.
+>
+> **Phase 5 — Visual Review via Playwright MCP**
+> Use Playwright MCP to visually review the game. If MCP tools are not available, fall back to reading iterate screenshots from `output/iterate/`.
+>
+> With MCP:
+> 1. `browser_navigate` to `http://localhost:<port>`
+> 2. `browser_wait_for` — wait 2 seconds for the game to load
+> 3. `browser_take_screenshot` — save as `output/qa-gameplay.png`
+> 4. Assess: Are entities visible? Is the game rendering correctly?
+> 5. Check safe zone: Is any UI hidden behind the top ~8% (Play.fun widget area)?
+> 6. Check entity sizing: Is the main character large enough (12–15% screen width for character games)?
+> 7. Wait for game over (or navigate to it), `browser_take_screenshot` — save as `output/qa-gameover.png`
+> 8. Check buttons: Are button labels visible? Blank rectangles = broken button pattern.
+>
+> Without MCP (fallback):
+> 1. Read the iterate screenshots from `output/iterate/shot-*.png`
+> 2. Assess visual quality from those screenshots
+>
+> **Return your results in this exact format (text only, no images):**
+> ```
+> QA RESULT: PASS|FAIL
+>
+> Phase 1 (Build): PASS|FAIL
+> Phase 2 (Runtime): PASS|FAIL
+> Phase 3 (Gameplay): Iterate PASS|FAIL, Scoring PASS|FAIL|SKIPPED, Death PASS|FAIL|SKIPPED, Errors PASS|FAIL
+> Phase 4 (Architecture): PASS — N/N checks
+> Phase 5 (Visual): PASS|FAIL — <issues if any>
+>
+> ISSUES:
+> - <issue descriptions, or "None">
+>
+> SCREENSHOTS: output/qa-gameplay.png, output/qa-gameover.png
+> ```
+
+### Orchestrator Flow
+
 ```
-
-If the build fails, proceed to autofix.
-
-### Phase 2 — Runtime Check
-
-```bash
-cd <project-dir> && node scripts/verify-runtime.mjs
+Launch QA subagent → read text result
+  If PASS → proceed to next step
+  If FAIL → launch autofix subagent with ISSUES list → re-run QA subagent
+  Max 3 attempts per step
 ```
-
-This script launches headless Chromium, loads the game, and checks for runtime errors (WebGL failures, uncaught exceptions, console errors). It exits 0 on success, 1 on failure with error details.
-
-If the runtime check fails, proceed to autofix.
-
-### Phase 2.5 — Iterate Check (screenshots + game state)
-
-```bash
-cd <project-dir> && node scripts/iterate-client.js \
-  --url http://localhost:<port> \
-  --actions-json '[{"buttons":["space"],"frames":4}]' \
-  --iterations 2 --screenshot-dir output/iterate
-```
-
-This produces screenshots (`output/iterate/shot-*.png`), game state JSON (`output/iterate/state-*.json`), and error files (`output/iterate/errors-*.json`). Feed these to the autofix subagent for richer context when issues are found.
-
-**Skip this phase** if `scripts/iterate-client.js` is not present (backward compatibility with existing projects).
-
-### Phase 3 — Visual Review via Playwright MCP
-
-Use the Playwright MCP to visually review the game:
-
-1. **Take a screenshot** of the game running in the browser
-2. **Assess visually**: Is the game rendering correctly? Are there visual bugs, layout issues, or broken elements?
-3. **Identify issues**: Note any visual problems that need fixing (e.g., elements off-screen, missing graphics, broken UI, wrong colors)
-
-If visual issues are found, proceed to autofix.
 
 ### Autofix Logic
 
-When any phase fails or visual issues are found:
+When the QA subagent reports FAIL:
 
-1. Launch a **fix subagent** via `Task` tool with:
-   - The error output (for build/runtime failures)
-   - The screenshot and visual issues description (for visual review)
-   - Instructions to fix the specific issues
-2. Re-run the Verification Protocol (all three phases)
-3. Up to **3 total attempts** per step (1 original + 2 retries)
-4. If all 3 attempts fail, report the failure to the user and ask whether to skip or abort
+1. **Read `output/autofix-history.json`** to see what fixes were already attempted. If a previous entry matches the same `issue` and `fix_attempted` with `result: "failure"`, instruct the subagent to try a different approach.
+2. Launch a **fix subagent** via `Task` tool with:
+   - The ISSUES list from the QA result
+   - The phase that failed (build errors, runtime errors, gameplay issues, visual problems)
+   - Any relevant failed attempts from `output/autofix-history.json` so the subagent knows what NOT to repeat
+3. **After each autofix attempt**, append an entry to `output/autofix-history.json`:
+   ```json
+   { "step": "<step name>", "issue": "<what failed>", "fix_attempted": "<what was tried>", "result": "success|failure", "timestamp": "<ISO date>" }
+   ```
+4. Re-run the QA subagent (all phases)
+5. Up to **3 total attempts** per step (1 original + 2 retries)
+6. If all 3 attempts fail, report the failure to the user and ask whether to skip or abort
 
 **Important**: Always fix issues before proceeding to the next step. The autofix loop ensures each step produces working, visually correct output.
 
@@ -146,6 +206,8 @@ Create all pipeline tasks upfront using `TaskCreate`:
 6. Monetize with Play.fun (register on OpenGameProtocol, add SDK, redeploy)
 
 This gives the user full visibility into pipeline progress at all times. Quality assurance (build, runtime, visual review, autofix) is built into each step, not a separate task.
+
+After creating tasks, create the `output/` directory in the project root and initialize `output/autofix-history.json` as an empty array `[]`. This file tracks all autofix attempts across the pipeline so fix subagents avoid repeating failed approaches.
 
 ### Step 1: Scaffold the game
 
@@ -204,9 +266,79 @@ Launch a `Task` subagent with these instructions:
 > - Ensure restart is clean — test mentally that 3 restarts in a row would work identically
 > - Add `isMuted` to GameState for audio mute support
 >
+> **CRITICAL — Preserve the button pattern:**
+> - The template's `GameOverScene.js` contains a working `createButton()` helper (Container + Graphics + Text). **Do NOT rewrite this method.** Keep it intact or copy it into any new scenes that need buttons. The correct z-order is: Graphics first (background), Text second (label), Container interactive. If you put Graphics on top of Text, the text becomes invisible. If you make the Graphics interactive instead of the Container, hover/press states break.
+>
+> **Character & entity sizing:**
+> - Size all entities proportionally: `GAME.WIDTH * ratio` and `GAME.HEIGHT * ratio`, never fixed pixel values like `40 * PX`.
+> - For character-driven games (named personalities, mascots, famous figures): make the main character prominent — `GAME.WIDTH * 0.12` to `GAME.WIDTH * 0.15` (12–15% of screen width). Use bobblehead proportions (head = 40–50% of sprite height) for personality games.
+> - Define all sizes in `Constants.js` as `GAME.WIDTH * ratio` or `GAME.HEIGHT * ratio`.
+>
+> **Play.fun safe zone:**
+> - Import `SAFE_ZONE` from `Constants.js`. All UI text, buttons, and interactive elements (title text, score panels, restart buttons) must be positioned below `SAFE_ZONE.TOP`. The Play.fun SDK renders a 75px widget bar at the top of the viewport (z-index 9999). Use `safeTop + usableH * ratio` for proportional positioning within the usable area (where `usableH = GAME.HEIGHT - SAFE_ZONE.TOP`).
+>
+> **Generate game-specific test actions:**
+> After implementing the core loop, overwrite `scripts/example-actions.json` with actions tailored to this game. Requirements:
+> - Use the game's actual input keys (e.g., ArrowLeft/ArrowRight for dodger, space for flappy, w/a/s/d for top-down)
+> - Include enough gameplay to score at least 1 point
+> - Include a long idle period (60+ frames with no input) to let the fail condition trigger
+> - Total should be at least 150 frames of gameplay
+>
+> Example for a dodge game (arrow keys):
+> ```json
+> [
+>   {"buttons":["ArrowRight"],"frames":20},
+>   {"buttons":["ArrowLeft"],"frames":20},
+>   {"buttons":["ArrowRight"],"frames":15},
+>   {"buttons":[],"frames":10},
+>   {"buttons":["ArrowLeft"],"frames":20},
+>   {"buttons":[],"frames":80}
+> ]
+> ```
+>
+> Example for a platformer (space to jump):
+> ```json
+> [
+>   {"buttons":["space"],"frames":4},
+>   {"buttons":[],"frames":25},
+>   {"buttons":["space"],"frames":4},
+>   {"buttons":[],"frames":25},
+>   {"buttons":["space"],"frames":4},
+>   {"buttons":[],"frames":80}
+> ]
+> ```
+>
 > Do NOT start a dev server or run builds — the orchestrator handles that.
 
-**After subagent returns**, run the Verification Protocol (Phase 1 + Phase 2).
+**After subagent returns**, run the Verification Protocol.
+
+**Create `progress.md`** at the game's project root. Read the game's actual source files to populate it accurately:
+- Read `src/core/EventBus.js` for the event list
+- Read `src/core/Constants.js` for the key sections (GAME, PLAYER, ENEMY, etc.)
+- List files in `src/entities/` for entity names
+- Read `src/core/GameState.js` for state fields
+
+Write `progress.md` with this structure:
+
+```markdown
+# Progress
+
+## Game Concept
+- **Name**: [game name from project]
+- **Engine**: Phaser 3 / Three.js
+- **Description**: [from user's original prompt]
+
+## Step 1: Scaffold
+- **Entities**: [list entity names from src/entities/]
+- **Events**: [list event names from EventBus.js]
+- **Constants keys**: [top-level sections from Constants.js, e.g. GAME, PLAYER, ENEMY, COLORS]
+- **Scoring system**: [how points are earned, from GameState + scene logic]
+- **Fail condition**: [what ends the game]
+- **Input scheme**: [keyboard/mouse/touch controls implemented]
+
+## Decisions / Known Issues
+- [any notable decisions or issues from scaffolding]
+```
 
 **Tell the user:**
 > Your game is scaffolded and running! Here's how it's organized:
@@ -235,6 +367,8 @@ Launch a `Task` subagent with these instructions:
 > **Engine**: 2D (Phaser 3)
 > **Skill to load**: `game-assets`
 >
+> **Read `progress.md`** at the project root before starting. It describes the game's entities, events, constants, and scoring system from Step 1.
+>
 > Follow the game-assets skill fully:
 > 1. Read all entity files (`src/entities/`) to find `generateTexture()` / `fillCircle()` calls
 > 2. Choose the palette that matches the game's theme (DARK, BRIGHT, or RETRO)
@@ -246,6 +380,8 @@ Launch a `Task` subagent with these instructions:
 > 8. Update entity constructors to use pixel art instead of geometric shapes
 > 9. Add Phaser animations for entities with multiple frames
 > 10. Adjust physics bodies for new sprite dimensions
+>
+> **After completing your work**, append a `## Step 1.5: Assets` section to `progress.md` with: palette used, sprites created, any dimension changes to entities.
 >
 > Do NOT run builds — the orchestrator handles verification.
 
@@ -274,6 +410,8 @@ Launch a `Task` subagent with these instructions:
 > **Engine**: `<2d|3d>`
 > **Skill to load**: `game-designer`
 >
+> **Read `progress.md`** at the project root before starting. It describes the game's entities, events, constants, and what previous steps have done.
+>
 > Apply the game-designer skill:
 > 1. Audit the current visuals — read Constants.js, all scenes, entities, EventBus
 > 2. Score each visual area (background, palette, animations, particles, transitions, typography, game feel, game over) on a 1-5 scale
@@ -285,6 +423,8 @@ Launch a `Task` subagent with these instructions:
 >    - UI juice: button hover, text shadows, floating score text
 > 4. All new values go in Constants.js, use EventBus for triggering effects
 > 5. Don't alter gameplay mechanics
+>
+> **After completing your work**, append a `## Step 2: Design` section to `progress.md` with: improvements applied, new effects added, any color or layout changes.
 >
 > Do NOT run builds — the orchestrator handles verification.
 
@@ -311,6 +451,8 @@ Launch a `Task` subagent with these instructions:
 > **Engine**: `<2d|3d>`
 > **Skill to load**: `game-audio`
 >
+> **Read `progress.md`** at the project root before starting. It describes the game's entities, events, constants, and what previous steps have done.
+>
 > Apply the game-audio skill:
 > 1. Audit the game: check for `@strudel/web`, read EventBus events, read all scenes
 > 2. Install `@strudel/web` if needed
@@ -319,6 +461,8 @@ Launch a `Task` subagent with these instructions:
 > 5. Wire audio into main.js and all scenes
 > 6. **Important**: Use explicit imports from `@strudel/web` (`import { stack, note, s } from '@strudel/web'`) — do NOT rely on global registration
 > 7. **Mute toggle**: Wire `AUDIO_TOGGLE_MUTE` to `gameState.game.isMuted`. Both BGM and SFX must check `isMuted` before playing. Add M key shortcut and a speaker icon UI button.
+>
+> **After completing your work**, append a `## Step 3: Audio` section to `progress.md` with: BGM patterns added, SFX event mappings, mute wiring confirmation.
 >
 > Do NOT run builds — the orchestrator handles verification.
 

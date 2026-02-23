@@ -1,6 +1,9 @@
 ---
 name: monetize-game
 description: Register your game on Play.fun (OpenGameProtocol), add the browser SDK, and get a monetized play.fun URL
+argument-hint: "[game-path]"
+disable-model-invocation: true
+allowed-tools: ["Bash", "Read", "Write", "Edit", "Glob", "Grep", "WebFetch", "Task"]
 ---
 
 # Monetize Game (Play.fun / OpenGameProtocol)
@@ -147,7 +150,7 @@ Then add before the closing `</head>` tag, substituting the actual API key:
 <script src="https://sdk.play.fun/latest"></script>
 ```
 
-**Important**: The `x-ogp-key` meta tag must contain the **user's API key** (not the game ID). Do NOT leave the placeholder `USER_API_KEY_HERE` — always substitute the actual key extracted above.
+**Important**: The `x-ogp-key` meta tag must contain the **user's Play.fun API key** (not the game ID). Do NOT leave the placeholder `USER_API_KEY_HERE` — always substitute the actual key extracted above.
 
 #### 4b. Create `src/playfun.js` integration module
 
@@ -185,8 +188,7 @@ export async function initPlayFun() {
 }
 
 function wireEvents() {
-  // Award points on score changes
-  // addPoints() buffers points locally — call frequently during gameplay
+  // addPoints() — call frequently during gameplay to buffer points locally (non-blocking)
   if (Events.SCORE_CHANGED) {
     eventBus.on(Events.SCORE_CHANGED, ({ score, delta }) => {
       if (sdk && initialized && delta > 0) {
@@ -195,12 +197,8 @@ function wireEvents() {
     });
   }
 
-  // Save points on game over
-  // savePoints() opens a BLOCKING MODAL — only call at natural break points:
-  // - Game over
-  // - Level complete
-  // - User returns to menu
-  // DO NOT call savePoints() during active gameplay or on a timer!
+  // savePoints() — ONLY call at natural break points (game over, level complete)
+  // WARNING: savePoints() opens a BLOCKING MODAL — never call during active gameplay!
   if (Events.GAME_OVER) {
     eventBus.on(Events.GAME_OVER, () => {
       if (sdk && initialized) {
@@ -209,7 +207,7 @@ function wireEvents() {
     });
   }
 
-  // Save on page unload (non-blocking, browser handles it)
+  // Save on page unload (browser handles this gracefully)
   window.addEventListener('beforeunload', () => {
     if (sdk && initialized) {
       sdk.savePoints();

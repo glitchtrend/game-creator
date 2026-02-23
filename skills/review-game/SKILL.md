@@ -1,6 +1,8 @@
 ---
 name: review-game
 description: Review an existing game codebase for architecture, performance, and best practices
+argument-hint: "[path-to-game]"
+disable-model-invocation: true
 ---
 
 # Review Game
