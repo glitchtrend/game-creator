@@ -251,6 +251,12 @@ Launch a `Task` subagent with these instructions:
 > - Add `isMuted` to GameState for audio mute support
 > - **Update `render_game_to_text()`** in `main.js` to reflect your new entities, obstacles, and mechanics. Add all player-relevant state: position, velocity, visible enemies/obstacles, collectibles, timers/cooldowns, and mode flags.
 >
+> **Visual identity — push the pose:**
+> - If the player character represents a real person or brand, build visual recognition into the entity from the start. Don't use generic circles/rectangles as placeholders — use descriptive colors, proportions, and features that communicate identity even before pixel art is added.
+> - Named opponents/NPCs must have visual presence on screen — never text-only. At minimum use distinct colored shapes that suggest the brand. Better: simple character forms with recognizable features.
+> - Collectibles and hazards must be visually self-explanatory. Avoid abstract concepts ("imagination blocks", "creativity sparks"). Use concrete objects players instantly recognize (polaroids, trophies, lightning bolts, money bags, etc.).
+> - Think: "Could someone screenshot this and immediately know what the game is about?"
+>
 > **Iterate after each meaningful change**: The dev server is running on port `<port>`. After each chunk of work (e.g., input wired up, collision added, scoring working), run:
 > ```
 > node scripts/iterate-client.js --url http://localhost:<port> --actions-file scripts/example-actions.json --iterations 3
@@ -323,6 +329,13 @@ Launch a `Task` subagent:
 > 10. Adjust physics bodies for new sprite dimensions
 >
 > **Character prominence**: If the game features a real person or named personality, use the Personality Character (Bobblehead) archetype — 32x48 grid at scale 4 (renders to 128x192px, ~35% of canvas height). The character must be the visually dominant element on screen. Supporting entities stay at Medium (16x16) or Small (12x12) to create clear visual hierarchy.
+>
+> **Push the pose — thematic expressiveness:**
+> - Sprites must visually embody who/what they represent. A sprite for "Grok AI" should look like Grok (logo features, brand colors, xAI aesthetic) — not a generic robot or colored circle.
+> - For real people: exaggerate their most recognizable features (signature hairstyle, glasses, facial hair, clothing). Recognition IS the meme hook.
+> - For brands/products: incorporate logo shapes, brand colors, and distinctive visual elements into the sprite design.
+> - For game objects: make them instantly recognizable. A "power-up" should look like the specific thing it represents in the theme, not a generic star or diamond.
+> - Opponents should be visually distinct from each other — different colors, shapes, sizes, and personality. A player should tell them apart at a glance.
 >
 > **Iterate after each meaningful change**: The dev server is running on port `<port>`. After updating sprites/backgrounds, run:
 > ```

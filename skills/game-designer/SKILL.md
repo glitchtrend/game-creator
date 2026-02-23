@@ -35,6 +35,16 @@ The design target is not just the player — it's a **viewer scrolling a social 
 4. **Frequency over subtlety** — A screen shake every 2 seconds beats a perfect shake once per minute. More effects at moderate intensity > fewer effects at high intensity.
 5. **Silent communication** — Text slams ("COMBO!", "ON FIRE!"), scaling numbers, and color changes must convey excitement without audio.
 
+### Push the Pose — Thematic Commitment
+
+The spectacle philosophy makes games visually exciting. This section makes them thematically rich. Every visual decision must reinforce the game's story:
+
+- **Named entities need visual identity**: A game about "Grok vs rival AIs" where Grok is a blue circle has failed. Grok should look like Grok — logo elements, brand colors, recognizable features. Same for every named entity.
+- **Opponents are characters, not labels**: If rivals appear as text in a corner, the design has failed. Show faces, logos, animated characters. Competition should be visible and dramatic.
+- **Concrete beats abstract**: "Imagination sparks" means nothing visually. Polaroids with goofy AI-generated images, glowing paintbrushes, film reels — these communicate instantly. Every game object must pass the "could I draw this?" test.
+- **Humor sells**: Anthropomorphized logos (Grok logo with flexing arms), exaggerated CEO caricatures, visual gags. Games should make people smile before they even play.
+- **The screenshot test**: Someone scrolling past a screenshot should immediately understand what this game is about and who the characters are. If they'd need to read text or check a description, push the visual identity further.
+
 ### Opening Moment
 
 These elements fire in `create()` before any player input:
@@ -75,10 +85,11 @@ Evaluate these areas and score each 1-5:
 | **Entity Prominence** | Is the player character large enough to read? Character-driven games need 12-15% of GAME.WIDTH. Are entities proportionally sized (`GAME.WIDTH * ratio`), not fixed pixels? |
 | **Character Prominence** | Is the main character the visually dominant element? Does it occupy 30%+ of screen height? Larger than all other entities? |
 | **First Impression / Viral Appeal** | Does the game explode visually in the first 3 seconds? Entrance animation, ambient particles active, background in motion? Would a 13-second silent clip stop a scroller? |
+| **Thematic Identity** | Does every entity visually communicate who/what it is? Could you identify the game's theme from a screenshot alone? Named entities recognizable? No abstract/generic objects? |
 
 Present the scores as a table, then list the top improvements ranked by visual impact.
 
-**Mandatory threshold**: Any area scoring below 4 MUST be improved before the design pass is complete. **First Impression / Viral Appeal is the most critical category** — it directly determines whether the promo clip converts viewers.
+**Mandatory threshold**: Any area scoring below 4 MUST be improved before the design pass is complete. **First Impression / Viral Appeal is the most critical category** — it directly determines whether the promo clip converts viewers. **Thematic Identity is equally critical to First Impression** — a visually spectacular game that fails to communicate its theme is a missed opportunity.
 
 ### Step 3: Implement improvements
 
