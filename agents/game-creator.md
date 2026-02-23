@@ -396,7 +396,7 @@ Launch a `Task` subagent:
 > 4. Add audio events to EventBus.js (including `AUDIO_TOGGLE_MUTE`)
 > 5. Wire audio into main.js and all scenes
 > 6. **Important**: Use explicit imports from `@strudel/web` (`import { stack, note, s } from '@strudel/web'`) — do NOT rely on global registration
-> 7. **Mute toggle**: Wire `AUDIO_TOGGLE_MUTE` to `gameState.game.isMuted`. Both BGM and SFX must check `isMuted` before playing. Add M key shortcut and a speaker icon UI button.
+> 7. **Mute toggle**: Wire `AUDIO_TOGGLE_MUTE` to `gameState.game.isMuted`. Both BGM and SFX must check `isMuted` before playing. Add M key shortcut and a speaker icon UI button drawn with the **Phaser Graphics API** (`fillRect`, `fillTriangle`, `arc`, `lineBetween`). Do NOT use `this.add.text()` for the mute button — see the game-audio skill "Mute Button" section for exact drawing code.
 >
 > **Iterate after each meaningful change**: The dev server is running on port `<port>`. After wiring audio, run:
 > ```
