@@ -15,98 +15,56 @@ Before choosing an archetype, consider what each entity represents thematically:
 
 When in doubt, make it MORE recognizable, MORE exaggerated, MORE character-driven. We dial back, never up.
 
-## Personality Character (Caricature)
+## Personality Character (South Park Photo-Composite)
 
-For games featuring real people or named personalities (Karpathy, Altman, Amodei, etc.). Recognition IS the meme hook — the character must dominate the screen.
+For games featuring real people or named personalities (Altman, Amodei, Musk, Zuckerberg, etc.). Photo heads composited onto South Park-style cartoon bodies — instantly recognizable, no hand-drawn pixel art needed.
 
-- **Grid**: 32x48 (wide enough for facial detail, tall for caricature proportions)
-- **Scale**: 4 (renders to 128x192px = ~35% of 540px canvas height)
-- Head occupies 60%+ of sprite height; exaggerate signature features (hair, glasses, facial hair) at 4-6px
+- **Dimensions**: 200x300 per frame (frameWidth: 200, frameHeight: 300)
+- **Spritesheet**: Horizontal strip with all expressions
+- **Source**: Pre-built in the character library at `/home/glitchtrend/character-library/`
+- Head occupies 65% of sprite height — large, recognizable photo on a small cartoon body
 - Must be the largest entity on screen — supporting entities stay at Medium (16x16) or Small (12x12)
-- Body is stubby (40% of height) to maximize head real estate
+
+### Expression Frame Index Reference
+
+Frame indices are fixed and consistent across all characters:
+
+| Frame | Expression | Use Case |
+|-------|-----------|----------|
+| 0 | normal | Default/idle state |
+| 1 | happy | Score point, collect item, win |
+| 2 | angry | Take damage, lose life, opponent scores |
+| 3 | surprised | Power-up, special event, streak milestone |
+
+Not all characters have all 4 expressions — check `manifest.json` for available frames. If a character has only 3 frames (normal, happy, angry), don't reference frame 3.
+
+### Loading in Phaser
 
 ```js
-// sprites/personality.js — 32x48 caricature template
-// Head: rows 0-28 (60%), Body: rows 29-40, Legs: rows 41-47
-// 1=outline, 2=shadow, 3=skin, 4=hair, 5=highlight, 6=shirt, 7=pants, 8=white(eyes/teeth), 9=glasses/accessory
-export const PERSONALITY_IDLE = [
-  [0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,1,1,4,4,4,4,4,4,4,4,4,4,1,1,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,1,4,4,4,4,4,4,4,4,4,4,4,4,4,4,1,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,1,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,1,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,1,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,1,0,0,0,0,0,0],
-  [0,0,0,0,0,0,1,4,4,4,4,4,5,4,4,4,4,4,4,5,4,4,4,4,4,1,0,0,0,0,0,0],
-  [0,0,0,0,0,0,1,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,1,0,0,0,0,0,0],
-  [0,0,0,0,0,1,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,1,0,0,0,0,0],
-  [0,0,0,0,0,1,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,1,0,0,0,0,0],
-  [0,0,0,0,1,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,1,0,0,0,0],
-  [0,0,0,0,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,0,0,0,0],
-  [0,0,0,0,1,3,3,3,3,9,9,9,9,3,3,3,3,9,9,9,9,3,3,3,3,3,3,1,0,0,0,0],
-  [0,0,0,0,1,3,3,3,9,9,8,8,9,9,3,3,9,9,8,8,9,9,3,3,3,3,3,1,0,0,0,0],
-  [0,0,0,0,1,3,3,3,9,9,1,8,9,9,3,3,9,9,1,8,9,9,3,3,3,3,3,1,0,0,0,0],
-  [0,0,0,0,1,3,3,3,9,9,9,9,9,9,3,3,9,9,9,9,9,9,3,3,3,3,3,1,0,0,0,0],
-  [0,0,0,0,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,0,0,0,0],
-  [0,0,0,0,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,0,0,0,0],
-  [0,0,0,0,0,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,0,0,0,0,0],
-  [0,0,0,0,0,1,3,3,3,3,3,3,3,1,1,1,1,1,3,3,3,3,3,3,3,3,1,0,0,0,0,0],
-  [0,0,0,0,0,0,1,3,3,3,3,3,3,8,8,8,8,8,3,3,3,3,3,3,3,1,0,0,0,0,0,0],
-  [0,0,0,0,0,0,1,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,1,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,1,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,1,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,1,2,3,3,3,3,3,3,3,3,3,3,3,3,2,1,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,1,1,2,3,3,3,3,3,3,3,3,2,1,1,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,1,1,3,3,3,3,3,3,1,1,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,1,3,3,3,3,3,3,1,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,1,3,3,3,3,3,3,1,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,1,3,3,3,3,3,3,1,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,1,2,3,3,3,3,2,1,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,1,6,6,6,6,6,6,6,6,1,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,1,6,6,6,6,6,6,6,6,6,6,1,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,1,6,6,6,6,6,6,6,6,6,6,1,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,1,3,6,6,6,6,6,6,6,6,6,6,3,1,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,1,3,6,6,6,6,6,6,6,6,6,6,3,1,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,1,6,6,6,6,6,6,6,6,6,6,1,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,1,6,6,6,6,6,6,6,6,6,6,1,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,1,6,6,6,1,1,6,6,6,1,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,1,6,6,6,1,1,6,6,6,1,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,1,7,7,7,1,1,7,7,7,1,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,1,7,7,7,1,1,7,7,7,1,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,1,7,7,7,1,1,7,7,7,1,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,1,7,7,1,0,0,1,7,7,1,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,1,7,7,1,0,0,1,7,7,1,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,1,7,7,1,0,0,1,7,7,1,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0],
-];
+// Preloader
+this.load.spritesheet('sam-altman', 'assets/characters/sam-altman/spritesheet.png', {
+  frameWidth: 200,
+  frameHeight: 300,
+});
 
-export const PERSONALITY_FRAMES = [PERSONALITY_IDLE];
+// Create sprite
+this.sprite = scene.physics.add.sprite(x, y, 'sam-altman', EXPRESSION.NORMAL);
 ```
-
-Customize per personality: change hair color/style (index 4), add glasses (index 9), adjust facial hair. The head rows (0-28) are where all recognition lives — spend your detail budget there.
 
 ### Character Feature Reference
 
-Physical descriptions for commonly-appearing tech figures. Use these to customize the personality template — every field maps to sprite design decisions.
+Physical descriptions for commonly-appearing tech figures. Use these to select source images for new character builds.
 
-| Person | Hair | Face | Clothing | Palette accent | Key feature |
-|--------|------|------|----------|----------------|-------------|
-| Sam Altman | Short sandy/light brown, side-parted | Clean-shaven, round face | Gray hoodie | `0xC4A882` (sandy) | The hoodie + round face combo |
-| Dario Amodei | Dark curly hair, voluminous | Beard/stubble, rectangular glasses | Blazer over casual shirt | `0x3D2B1F` (dark brown) | Curly hair + glasses + beard |
-| Elon Musk | Receding hairline, short | Broad face, clean-shaven | Black t-shirt | `0x2A2A2A` (charcoal) | Receding hairline + broad jaw |
-| Mark Zuckerberg | Short curly brown hair | Clean-shaven, narrow face | Simple gray/blue t-shirt | `0x4267B2` (Facebook blue) | Curly top + blank expression |
-| Satya Nadella | Bald | Glasses, warm smile | Dark suit and tie | `0x00A4EF` (Microsoft blue) | Bald + glasses |
-| Sundar Pichai | Dark hair, neatly styled | Clean-shaven, slim face | Casual button-down shirt | `0x4285F4` (Google blue) | Slim face + neat dark hair |
-| Jensen Huang | Dark hair, swept back | Clean-shaven, square jaw | Black leather jacket (signature) | `0x76B900` (NVIDIA green) | Leather jacket is instant recognition |
-| Andrej Karpathy | Dark wavy hair | Stubble, friendly face | Casual (t-shirt/hoodie) | `0x5C5C5C` (neutral gray) | Wavy hair + stubble |
-
-When building a personality sprite for any of these people:
-1. Start from `PERSONALITY_IDLE` template
-2. Set hair color (index 4) to their palette accent
-3. Add/remove glasses (index 9) per the table
-4. Adjust hair shape in rows 0-7 (curly = wider irregular edges, receding = narrower top rows, bald = skip hair rows)
-5. Add facial hair in rows 17-19 if applicable (beard = fill chin area with dark index)
-6. Set shirt color (index 6) to match their typical clothing
+| Person | Slug | Body Type | Expressions | Key Feature |
+|--------|------|-----------|-------------|-------------|
+| Sam Altman | sam-altman | casual | 4 (normal, happy, angry, surprised) | Gray hoodie + round face |
+| Dario Amodei | dario-amodei | suit | 4 | Curly hair + glasses + beard |
+| Elon Musk | elon-musk | casual | 4 | Receding hairline + broad jaw |
+| Mark Zuckerberg | mark-zuckerberg | casual | 4 | Curly top + blank expression |
+| Satya Nadella | satya-nadella | suit | 4 | Bald + glasses |
+| Sundar Pichai | sundar-pichai | suit | 3 (normal, happy, angry) | Slim face + neat dark hair |
+| Jensen Huang | jensen-huang | leather-jacket | 4 | Black leather jacket |
+| Andrej Karpathy | andrej-karpathy | casual | 3 (normal, happy, angry) | Wavy hair + stubble |
 
 ## Humanoid (Player, NPC, Warrior)
 

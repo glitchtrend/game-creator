@@ -350,6 +350,28 @@ Launch a `Task` subagent with these instructions:
 > - **AI/opponent interaction**: how the opponent interacts with it, if applicable
 >
 > For named people: describe hair, glasses, facial hair, clothing. For companies: specify logo to download. NEVER use a letter or text label as visual identity.
+>
+> ## Expression Map
+>
+> For each personality character, map game events to expressions:
+>
+> ### Player: [Name]
+> | Game Event | Expression | Why |
+> |---|---|---|
+> | Idle/default | normal | Resting state |
+> | Score point / collect item | happy | Positive reinforcement |
+> | Take damage / lose life | angry | Visceral reaction |
+> | Power-up / special event | surprised | Excitement |
+> | Win / game over (high score) | happy | Celebration |
+> | Lose / game over (low score) | angry | Defeat |
+>
+> ### Opponent: [Name]
+> | Game Event | Expression | Why |
+> |---|---|---|
+> | Idle/default | normal | Resting state |
+> | Player scores | angry | Frustrated at losing |
+> | Opponent scores | happy | Gloating |
+> | Near-miss / close call | surprised | Tension |
 > ```
 >
 > Do NOT start a dev server or run builds — the orchestrator handles that.
@@ -403,6 +425,26 @@ Mark task 1 as `completed`.
 
 Mark task 2 as `in_progress`.
 
+**Pre-step: Character Library Check**
+
+Before launching the asset subagent, check if the game uses personality characters:
+
+1. Read `design-brief.md` to identify personality characters
+2. For each personality, check `/home/glitchtrend/character-library/manifest.json`
+3. If the character exists in the library, copy their sprites into the game:
+   ```bash
+   mkdir -p <project-dir>/public/assets/characters/<slug>/
+   cp /home/glitchtrend/character-library/characters/<slug>/sprites/* \
+      <project-dir>/public/assets/characters/<slug>/
+   ```
+4. If a personality is NOT in the library, build it first:
+   ```bash
+   cd /home/glitchtrend/character-library
+   python3 build-character.py <slug> "<Full Name>" <body-type> <normal-url> <happy-url> <angry-url> [surprised-url]
+   ```
+   Then copy as above.
+5. Pass the list of available character slugs and their expression counts to the subagent.
+
 Launch a `Task` subagent with these instructions:
 
 > You are implementing Step 1.5 (Pixel Art Sprites) of the game creation pipeline.
@@ -413,7 +455,9 @@ Launch a `Task` subagent with these instructions:
 >
 > **Read `progress.md`** at the project root before starting. It describes the game's entities, events, constants, and scoring system from Step 1.
 >
-> Follow the game-assets skill fully:
+> **Character library sprites are already copied** to `public/assets/characters/<slug>/`. For personality characters, load the spritesheet and wire expression changes per the game-assets skill's "Expression Wiring Pattern". Add `EXPRESSION` and `EXPRESSION_HOLD_MS` to Constants.js. Wire expression changes to EventBus events per the Expression Map in `design-brief.md`.
+>
+> Follow the game-assets skill fully for non-personality entities:
 > 1. Read all entity files (`src/entities/`) to find `generateTexture()` / `fillCircle()` calls
 > 2. Choose the palette that matches the game's theme (DARK, BRIGHT, or RETRO)
 > 3. Create `src/core/PixelRenderer.js` — the `renderPixelArt()` + `renderSpriteSheet()` utilities

@@ -21,17 +21,135 @@ Procedural circles and rectangles are fast to scaffold, but players can't tell a
 
 | Tier | Use for | Source |
 |------|---------|--------|
+| **South Park characters** (default for personalities) | Named people / CEO characters | Character library at `/home/glitchtrend/character-library/` — photo heads composited onto cartoon bodies with expression spritesheets |
 | **Real images** (logos, photos) | Company logos, brand marks when game features a named company | Download to `public/assets/` with pixel art fallback |
 | **Meme/reference images** | Source tweet `image_url` — embed as background, splash, or texture when it enhances thematic identity | Download to `public/assets/` |
-| **Pixel art** (default) | Characters, items, game objects, enemies | Code-only 2D arrays rendered at runtime |
+| **Pixel art** (fallback) | Non-personality characters, items, game objects, enemies | Code-only 2D arrays rendered at runtime |
 
-**Pixel art** is the default for characters, items, and game objects — it's a legitimate art style (Celeste, Shovel Knight, Vampire Survivors) and generates unique per-game assets.
+**South Park characters** are the default for named personalities (Altman, Amodei, Musk, Zuckerberg, Nadella, Pichai, Huang, Karpathy). The character library at `/home/glitchtrend/character-library/` contains pre-built spritesheets with multiple expressions. Each spritesheet has frames for: normal (0), happy (1), angry (2), surprised (3). Games load these as Phaser spritesheets and wire expression changes to game events.
 
-**Real logos** are preferred for brand identity. When a game features OpenAI, Anthropic, Google, etc., download their logo and use it. A pixel art approximation of a logo is worse than the real thing.
+**Pixel art** is the fallback for personality characters not yet in the library and the default for non-personality entities (enemies, items, game objects).
 
-**Meme images** from the source tweet (`image_url` in thread.json) should be downloaded and incorporated when they enhance visual identity — as a background element, splash screen, or texture reference.
+**Real logos** are preferred for brand identity. When a game features OpenAI, Anthropic, Google, etc., download their logo and use it.
+
+**Meme images** from the source tweet (`image_url` in thread.json) should be downloaded and incorporated when they enhance visual identity.
 
 All tiers share the same fallback pattern: if an external asset fails to load, fall back to pixel art.
+
+## South Park Character System
+
+### Character Library
+
+Location: `/home/glitchtrend/character-library/`
+
+The library contains pre-built characters with photo-realistic heads composited onto South Park-style cartoon bodies. Each character has:
+- Multiple expression sprites (normal, happy, angry, surprised)
+- A horizontal spritesheet with all expressions
+- Metadata in `manifest.json`
+
+**Check the library first** before creating any personality sprite. If the character exists, copy their sprites into the game — no pixel art needed.
+
+```
+character-library/
+  manifest.json                    # Index of all built characters
+  bodies/                          # South Park body templates
+  characters/
+    sam-altman/
+      sprites/
+        normal.png                 # Individual expression sprites (200x300)
+        happy.png
+        angry.png
+        surprised.png
+        spritesheet.png            # All expressions in horizontal strip
+    dario-amodei/
+      ...
+```
+
+### Expression Constants
+
+Standard expression frame indices — must be consistent across all games:
+
+```js
+// In Constants.js
+export const EXPRESSION = {
+  NORMAL: 0,
+  HAPPY: 1,
+  ANGRY: 2,
+  SURPRISED: 3,
+};
+
+export const EXPRESSION_HOLD_MS = 600;
+```
+
+### Loading Characters from the Library
+
+During game build, copy character sprites into the game:
+```
+character-library/characters/<slug>/sprites/ → game-dir/public/assets/characters/<slug>/
+```
+
+In the Phaser preloader:
+```js
+preload() {
+  this.load.spritesheet('sam-altman', 'assets/characters/sam-altman/spritesheet.png', {
+    frameWidth: 200,
+    frameHeight: 300,
+  });
+}
+```
+
+### Expression Wiring Pattern
+
+Every personality character must have reactive expressions. Wire them to game events:
+
+```js
+// In the player/character entity constructor:
+this.sprite = scene.physics.add.sprite(x, y, 'sam-altman', EXPRESSION.NORMAL);
+this.expressionTimer = null;
+
+setExpression(expression, holdMs = EXPRESSION_HOLD_MS) {
+  this.sprite.setFrame(expression);
+  if (this.expressionTimer) this.expressionTimer.remove();
+  if (expression !== EXPRESSION.NORMAL) {
+    this.expressionTimer = this.scene.time.delayedCall(holdMs, () => {
+      this.sprite.setFrame(EXPRESSION.NORMAL);
+    });
+  }
+}
+
+// Wire to game events in the scene's create():
+eventBus.on(Events.PLAYER_DAMAGED, () => {
+  player.setExpression(EXPRESSION.ANGRY);
+});
+
+eventBus.on(Events.SCORE_CHANGED, () => {
+  player.setExpression(EXPRESSION.HAPPY);
+});
+
+eventBus.on(Events.SPECTACLE_STREAK, ({ streak }) => {
+  player.setExpression(EXPRESSION.SURPRISED, 1000);
+});
+
+// Opponents also react:
+eventBus.on(Events.OPPONENT_HIT, ({ id }) => {
+  opponents[id].setExpression(EXPRESSION.ANGRY);
+});
+
+eventBus.on(Events.OPPONENT_SCORES, ({ id }) => {
+  opponents[id].setExpression(EXPRESSION.HAPPY);
+});
+```
+
+### Building New Characters
+
+If a personality is needed but not in the library, build it:
+
+```bash
+cd /home/glitchtrend/character-library
+python3 build-character.py <slug> "<Full Name>" <body-type> <normal-url> <happy-url> <angry-url> [surprised-url]
+```
+
+Body types: `casual` (t-shirt/hoodie), `suit` (blazer), `leather-jacket` (Jensen special).
 
 ## Pixel Art Rendering System
 
