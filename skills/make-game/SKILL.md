@@ -287,7 +287,7 @@ Launch a `Task` subagent with these instructions:
 >
 > **Character & entity sizing:**
 > - Size all entities proportionally: `GAME.WIDTH * ratio` and `GAME.HEIGHT * ratio`, never fixed pixel values like `40 * PX`.
-> - For character-driven games (named personalities, mascots, famous figures): make the main character prominent — `GAME.WIDTH * 0.12` to `GAME.WIDTH * 0.15` (12–15% of screen width). Use bobblehead proportions (head = 40–50% of sprite height) for personality games.
+> - For character-driven games (named personalities, mascots, famous figures): make the main character prominent — `GAME.WIDTH * 0.12` to `GAME.WIDTH * 0.15` (12–15% of screen width). Use caricature proportions (large head = 40–50% of sprite height, exaggerate distinguishing features) for personality games.
 > - Define all sizes in `Constants.js` as `GAME.WIDTH * ratio` or `GAME.HEIGHT * ratio`.
 >
 > **Play.fun safe zone:**
@@ -424,7 +424,7 @@ Launch a `Task` subagent with these instructions:
 > 9. Add Phaser animations for entities with multiple frames
 > 10. Adjust physics bodies for new sprite dimensions
 >
-> **Character prominence**: If the game features a real person or named personality, use the Personality Character (Bobblehead) archetype — 32x48 grid at scale 4 (renders to 128x192px, ~35% of canvas height). The character must be the visually dominant element on screen. Supporting entities stay at Medium (16x16) or Small (12x12) to create clear visual hierarchy.
+> **Character prominence**: If the game features a real person or named personality, use the Personality Character (Caricature) archetype — 32x48 grid at scale 4 (renders to 128x192px, ~35% of canvas height). The character must be the visually dominant element on screen. Supporting entities stay at Medium (16x16) or Small (12x12) to create clear visual hierarchy.
 >
 > **Push the pose — thematic expressiveness:**
 > - Sprites must visually embody who/what they represent. A sprite for "Grok AI" should look like Grok (logo features, brand colors, xAI aesthetic) — not a generic robot or colored circle.

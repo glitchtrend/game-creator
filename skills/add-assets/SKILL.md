@@ -29,7 +29,7 @@ Present a table of sprites to create:
 
 | Entity | Archetype | Grid | Frames | Description |
 |--------|-----------|------|--------|-------------|
-| Player (personality) | Personality | 32x48 | 1-4 | Bobblehead of [name], scale 4 |
+| Player (personality) | Personality | 32x48 | 1-4 | Caricature of [name], scale 4 |
 | Player (generic) | Humanoid | 16x16 | 4 | ... |
 | Enemy X | Flying | 16x16 | 2 | ... |
 | Pickup | Item | 8x8 | 1 | ... |

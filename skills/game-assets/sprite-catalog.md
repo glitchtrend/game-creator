@@ -15,18 +15,18 @@ Before choosing an archetype, consider what each entity represents thematically:
 
 When in doubt, make it MORE recognizable, MORE exaggerated, MORE character-driven. We dial back, never up.
 
-## Personality Character (Bobblehead)
+## Personality Character (Caricature)
 
 For games featuring real people or named personalities (Karpathy, Altman, Amodei, etc.). Recognition IS the meme hook — the character must dominate the screen.
 
-- **Grid**: 32x48 (wide enough for facial detail, tall for bobblehead proportions)
+- **Grid**: 32x48 (wide enough for facial detail, tall for caricature proportions)
 - **Scale**: 4 (renders to 128x192px = ~35% of 540px canvas height)
 - Head occupies 60%+ of sprite height; exaggerate signature features (hair, glasses, facial hair) at 4-6px
 - Must be the largest entity on screen — supporting entities stay at Medium (16x16) or Small (12x12)
 - Body is stubby (40% of height) to maximize head real estate
 
 ```js
-// sprites/personality.js — 32x48 bobblehead template
+// sprites/personality.js — 32x48 caricature template
 // Head: rows 0-28 (60%), Body: rows 29-40, Legs: rows 41-47
 // 1=outline, 2=shadow, 3=skin, 4=hair, 5=highlight, 6=shirt, 7=pants, 8=white(eyes/teeth), 9=glasses/accessory
 export const PERSONALITY_IDLE = [

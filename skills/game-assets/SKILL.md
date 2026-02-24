@@ -322,7 +322,7 @@ At small scales, subtle changes read as smooth motion:
 | Large (boss, vehicle) | 24x24 or 32x32 | 3 | 72-96px | 13-18% |
 | **Personality (named character)** | **32x48** | **4** | **128x192px** | **35%** |
 
-**Character-driven games** (games starring named characters, personalities, or mascots): Use the Personality archetype. The main character should dominate the screen (~35% of canvas height). Use **bobblehead proportions** — oversized head (60%+ of sprite height), compact body — for maximum personality at any scale. Adjust `PLAYER.WIDTH` and `PLAYER.HEIGHT` in Constants.js to match.
+**Character-driven games** (games starring named characters, personalities, or mascots): Use the Personality archetype. The main character should dominate the screen (~35% of canvas height). Use **caricature proportions** — large head (60%+ of sprite height) with exaggerated features, compact body — for maximum personality at any scale. Adjust `PLAYER.WIDTH` and `PLAYER.HEIGHT` in Constants.js to match.
 
 When replacing geometric shapes with pixel art, match the rendered sprite size to the entity's `WIDTH`/`HEIGHT` in Constants.js. If the Constants values are too small for the art style, increase them — the sprite and the physics body should agree.
 

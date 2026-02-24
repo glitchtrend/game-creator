@@ -260,7 +260,7 @@ PLAYER: {
 }
 ```
 
-For **character-driven games** (named characters, personalities, mascots), make characters prominent — use 12–15% of `GAME.WIDTH` for the player width. Use **bobblehead proportions** (oversized head ~40–50% of sprite height, compact body) for personality games to maximize character recognition at any scale.
+For **character-driven games** (named characters, personalities, mascots), make characters prominent — use 12–15% of `GAME.WIDTH` for the player width. Use **caricature proportions** (large head ~40–50% of sprite height with exaggerated features, compact body) for personality games to maximize character recognition at any scale.
 
 **HTML boilerplate** (required for proper scaling):
 
