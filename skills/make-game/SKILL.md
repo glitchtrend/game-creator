@@ -438,33 +438,67 @@ Mark task 2 as `in_progress`.
 
 **Pre-step: Character Library Check**
 
-Before launching the asset subagent, check if the game uses personality characters:
+Before launching the asset subagent, check if the game uses personality characters. For each personality, resolve their sprites using this **tiered fallback** (try each tier in order, stop at the first success):
 
-1. Read `design-brief.md` to identify personality characters
-2. Resolve the character library path — find `character-library/manifest.json` relative to the plugin root:
+**1. Read `design-brief.md`** to identify personality characters and their slugs.
+
+**2. Resolve the character library path** — find `character-library/manifest.json` relative to the plugin root:
    - Check `character-library/manifest.json` relative to the plugin install directory
    - Check common plugin cache paths (e.g., `~/.claude/plugins/cache/local-plugins/game-creator/*/character-library/`)
-3. For each personality, check if their slug exists in `manifest.json`
-4. If the character exists in the library, copy their sprites:
-   ```bash
-   mkdir -p <project-dir>/public/assets/characters/<slug>/
-   cp <plugin-root>/character-library/characters/<slug>/sprites/* \
-      <project-dir>/public/assets/characters/<slug>/
-   ```
-5. If a personality is NOT in the library, build them:
-   a. Use WebSearch to find 4 expression images (transparent PNG preferred):
-      - normal: `"<Name> face transparent PNG pngimg OR cleanpng"`
-      - happy: `"<Name> smiling face transparent PNG"`
-      - angry: `"<Name> angry face transparent PNG"`
-      - surprised: `"<Name> surprised shocked face transparent PNG"`
-   b. Download images to `<project-dir>/public/assets/characters/<slug>/raw/`
-   c. Run the Node.js pipeline:
-      ```bash
-      node <plugin-root>/scripts/build-character.mjs "<Name>" \
-        <project-dir>/public/assets/characters/<slug>/ --skip-find
-      ```
-   d. The pipeline runs: ML bg removal → face detection crop → spritesheet assembly
-6. Pass the list of available character slugs and their expression counts to the subagent.
+
+**3. For each personality, try these tiers in order:**
+
+**Tier 1 — Pre-built (best)**: Check if slug exists in `manifest.json`. If yes, copy sprites:
+```bash
+mkdir -p <project-dir>/public/assets/characters/<slug>/
+cp <plugin-root>/character-library/characters/<slug>/sprites/* \
+   <project-dir>/public/assets/characters/<slug>/
+```
+Result: 4-expression spritesheet ready. Done.
+
+**Tier 2 — Build from 4 images (good)**: WebSearch for 4 expression photos:
+- normal: `"<Name> face transparent PNG pngimg OR cleanpng"`
+- happy: `"<Name> smiling face transparent PNG"`
+- angry: `"<Name> angry face transparent PNG"`
+- surprised: `"<Name> surprised shocked face transparent PNG"`
+
+If all 4 found, download to `<project-dir>/public/assets/characters/<slug>/raw/` and run:
+```bash
+node <plugin-root>/scripts/build-character.mjs "<Name>" \
+  <project-dir>/public/assets/characters/<slug>/ --skip-find
+```
+Result: 4-expression spritesheet. Done.
+
+**Tier 3 — Build from 1-3 images (acceptable)**: If WebSearch only finds 1-3 usable images:
+- Download whatever was found to `raw/` (e.g., only `normal.png` and `happy.png`)
+- **Duplicate the best image** (prefer normal) into the missing expression slots:
+  ```bash
+  cp raw/normal.png raw/angry.png    # fill missing with normal
+  cp raw/normal.png raw/surprised.png
+  ```
+- Run `build-character.mjs` as above — all 4 raw slots are filled, pipeline produces a 4-frame spritesheet
+- Result: 4-frame spritesheet where some expressions share the same face. Functional — the expression system still works, just with less visual variety.
+
+**Tier 4 — Single image fallback (minimum)**: If WebSearch finds exactly 1 image OR the pipeline fails on some images:
+- Use the single successful image for all 4 expression slots
+- Run `build-character.mjs` — produces a spritesheet where all 4 frames are identical
+- Result: Character is recognizable but has no expression changes. Still photo-composite, still works with the expression wiring (just no visible change).
+
+**Tier 5 — Generative pixel art (worst case)**: If NO images can be found or the ENTIRE pipeline fails (bg removal crash, face detection fails on all images, network errors):
+- Fall back to the **Personality Character (Caricature) archetype** from the `game-assets` skill — 32x48 pixel art grid at scale 4
+- Note in `progress.md`: `"<Name>: pixel art fallback — no photo-composite available"`
+- The subagent will create pixel art with recognizable features (hair, glasses, clothing) per the game-assets sprite design rules
+- Result: No photo-composite, but the character is still visually distinct via pixel art caricature.
+
+**4. Record results** for each character in `progress.md`:
+```
+## Characters
+- trump: Tier 1 (pre-built, 4 expressions)
+- karpathy: Tier 3 (1 image found, duplicated to 4 slots)
+- some-ceo: Tier 5 (pixel art fallback)
+```
+
+**5. Pass to subagent**: the list of character slugs, which tier each resolved to, and how many unique expressions each has. The subagent needs this to know whether to wire full expression changes or skip expression logic for Tier 5 characters.
 
 Launch a `Task` subagent with these instructions:
 

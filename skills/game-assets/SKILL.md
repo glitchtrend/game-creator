@@ -145,9 +145,11 @@ eventBus.on(Events.OPPONENT_SCORES, ({ id }) => {
 
 ### Building New Characters
 
-If a personality is needed but not in the library, build it using the project-level pipeline scripts:
+If a personality is needed but not in the library, build it using the project-level pipeline scripts. Follow the **tiered fallback** — try each tier in order, stop at first success:
 
-#### Step 1: Find Expression Images via WebSearch
+#### Tier 1: Full 4-expression build (best)
+
+**Step 1: Find Expression Images via WebSearch**
 
 Use WebSearch to find 4 distinct expression photos (transparent PNG preferred):
 
@@ -170,7 +172,7 @@ For each expression, look for:
 - Avoid illustrations/cartoons — use real photos for photo-composite characters.
 - Download to `<outputDir>/raw/normal.png`, `happy.png`, `angry.png`, `surprised.png`.
 
-#### Step 2: Run the Pipeline
+**Step 2: Run the Pipeline**
 
 ```bash
 # If images already have transparent backgrounds:
@@ -190,6 +192,45 @@ node scripts/build-character.mjs "<Full Name>" public/assets/<slug>/ --skip-find
 ```
 
 `crop-head.mjs` uses face-api.js (SSD MobileNet v1) to detect the face bounding box and crops with 25% padding. Falls back to bounding-box heuristic if no face is detected. Use `--padding 0.40` to increase padding around the detected face.
+
+#### Tier 2: Partial expressions (1-3 images found)
+
+If WebSearch only finds 1-3 usable images, **duplicate the best image** (prefer normal) into the missing expression slots before running the pipeline:
+
+```bash
+# Example: only found normal.png and happy.png
+cp raw/normal.png raw/angry.png
+cp raw/normal.png raw/surprised.png
+# Now run build-character.mjs as normal — all 4 raw slots are filled
+```
+
+Result: 4-frame spritesheet where some expressions share the same face. The expression wiring still works — character just shows the same face for missing expressions. Functional and recognizable.
+
+#### Tier 3: Single image (minimum photo-composite)
+
+If only 1 image is found, or the pipeline fails on all but one image:
+
+```bash
+# Duplicate the single image to all 4 slots
+cp raw/normal.png raw/happy.png
+cp raw/normal.png raw/angry.png
+cp raw/normal.png raw/surprised.png
+node scripts/build-character.mjs "<Name>" <outputDir>/ --skip-find
+```
+
+Result: All 4 frames are identical. Character is photo-recognizable but has no expression changes. Still loads as a spritesheet, still works with the expression wiring code (just no visible change).
+
+#### Tier 4: Generative pixel art (worst case)
+
+If NO usable images are found (WebSearch returns nothing, all downloads fail, pipeline crashes):
+
+- Skip the photo-composite pipeline entirely
+- Use the **Personality Character (Caricature) archetype** — 32x48 pixel art grid at scale 4 (renders to 128x192px)
+- Design the pixel art with recognizable features: signature hairstyle, glasses, facial hair, clothing color
+- Create 2-4 animation frames (idle + walk minimum) using `renderSpriteSheet()`
+- Wire as a standard pixel art entity — no expression system, no spritesheet loading
+
+This is the **absolute last resort**. Always exhaust image search first — even a single photo produces a better result than pixel art for personality characters.
 
 ## Pixel Art Rendering System
 
