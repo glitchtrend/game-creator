@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import {
   GAME, CLAVICULAR, ANDROGENIC, COLORS, PX, TRANSITION,
-  SAFE_ZONE, LIVES, MOG, PROJECTILE,
+  SAFE_ZONE, LIVES, MOG, PROJECTILE, EXPRESSION, EXPRESSION_HOLD_MS,
 } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 import { gameState } from '../core/GameState.js';
@@ -71,6 +71,36 @@ export class GameScene extends Phaser.Scene {
     eventBus.on(Events.PLAYER_DIED, this._onPlayerDied);
     eventBus.on(Events.LIFE_LOST, this._onLifeLost);
     eventBus.on(Events.MOG_FRAMEMOG, this._onFrameMog);
+
+    // --- Expression event listeners ---
+    // Clavicular expressions
+    this._onPowerupExprClavicular = () => {
+      this.player.setExpression(EXPRESSION.HAPPY);
+    };
+    this._onAttackExprClavicular = () => {
+      this.player.setExpression(EXPRESSION.ANGRY);
+    };
+    this._onFrameMogExprClavicular = () => {
+      this.player.setExpression(EXPRESSION.SURPRISED, 1000);
+    };
+
+    // Androgenic expressions
+    this._onPowerupExprAndrogenic = () => {
+      this.androgenic.setExpression(EXPRESSION.ANGRY);
+    };
+    this._onAttackExprAndrogenic = () => {
+      this.androgenic.setExpression(EXPRESSION.HAPPY);
+    };
+    this._onFrameMogExprAndrogenic = () => {
+      this.androgenic.setExpression(EXPRESSION.SURPRISED, 1000);
+    };
+
+    eventBus.on(Events.POWERUP_COLLECTED, this._onPowerupExprClavicular);
+    eventBus.on(Events.ATTACK_HIT, this._onAttackExprClavicular);
+    eventBus.on(Events.MOG_FRAMEMOG, this._onFrameMogExprClavicular);
+    eventBus.on(Events.POWERUP_COLLECTED, this._onPowerupExprAndrogenic);
+    eventBus.on(Events.ATTACK_HIT, this._onAttackExprAndrogenic);
+    eventBus.on(Events.MOG_FRAMEMOG, this._onFrameMogExprAndrogenic);
 
     // --- Invulnerability after hit ---
     this.invulnerable = false;
@@ -526,6 +556,15 @@ export class GameScene extends Phaser.Scene {
     eventBus.off(Events.PLAYER_DIED, this._onPlayerDied);
     eventBus.off(Events.LIFE_LOST, this._onLifeLost);
     eventBus.off(Events.MOG_FRAMEMOG, this._onFrameMog);
+
+    // Expression listeners
+    eventBus.off(Events.POWERUP_COLLECTED, this._onPowerupExprClavicular);
+    eventBus.off(Events.ATTACK_HIT, this._onAttackExprClavicular);
+    eventBus.off(Events.MOG_FRAMEMOG, this._onFrameMogExprClavicular);
+    eventBus.off(Events.POWERUP_COLLECTED, this._onPowerupExprAndrogenic);
+    eventBus.off(Events.ATTACK_HIT, this._onAttackExprAndrogenic);
+    eventBus.off(Events.MOG_FRAMEMOG, this._onFrameMogExprAndrogenic);
+
     if (this.scoreSystem) this.scoreSystem.destroy();
     if (this.spawnSystem) this.spawnSystem.destroy();
   }

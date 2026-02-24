@@ -1,12 +1,13 @@
 import Phaser from 'phaser';
-import { ANDROGENIC, GAME, PX } from '../core/Constants.js';
+import { ANDROGENIC, GAME, PX, CHARACTER, EXPRESSION, EXPRESSION_HOLD_MS } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 
 /**
  * Androgenic -- the opponent NPC.
- * A tall (6'5") Australian figure with a cap hiding a wig.
+ * Photo-composite bobblehead: cartoon South Park-style body + photo head sprite.
+ * A tall (6'5") figure with dark blue t-shirt, dark pants, dark shoes.
  * Stands at top of screen, sways side-to-side, throws attacks downward.
- * When frame mog triggers, his hat flies off revealing the wig/bald head.
+ * When frame mog triggers, his hat flies off revealing surprise expression.
  */
 export class Androgenic {
   constructor(scene) {
@@ -14,121 +15,235 @@ export class Androgenic {
     this.wigExposed = false;
     this.wigTimer = null;
     this.swayTime = 0;
+    this.currentExpression = EXPRESSION.NORMAL;
+    this._expressionTimer = null;
 
-    // Build the character using Graphics API
-    this.gfxNormal = scene.add.graphics();
-    this.gfxExposed = scene.add.graphics();
-    this.drawCharacter(this.gfxNormal, false);
-    this.drawCharacter(this.gfxExposed, true);
-    this.gfxExposed.setVisible(false);
+    const C = CHARACTER;
+
+    // Scale factor: Androgenic is taller/broader than Clavicular
+    this.bodyScale = 1.25;
+    const BS = this.bodyScale;
+
+    // --- Layer order: left arm (behind), right arm (behind), body, hat, head (front) ---
+
+    // Left arm graphics
+    this.leftArmGfx = scene.add.graphics();
+    this.drawLeftArm(this.leftArmGfx, C, BS);
+
+    // Right arm graphics
+    this.rightArmGfx = scene.add.graphics();
+    this.drawRightArm(this.rightArmGfx, C, BS);
+
+    // Body graphics (torso, legs, shoes)
+    this.bodyGfx = scene.add.graphics();
+    this.drawBody(this.bodyGfx, C, BS);
+
+    // Hat graphics (drawn as separate object for flying-off animation)
+    this.hatGfx = scene.add.graphics();
+    this.drawHat(this.hatGfx, C, BS);
+
+    // Head sprite (photo spritesheet on top)
+    this.headSprite = scene.add.sprite(0, 0, 'androgenic-head', EXPRESSION.NORMAL);
+    const headH = C.HEAD_H * BS;
+    const headScale = headH / C.FRAME_H;
+    this.headSprite.setScale(headScale);
+    // Position head above the torso
+    const torsoH = C.TORSO_H * BS;
+    const neckH = C.NECK_H * BS;
+    this.headY = -(torsoH * 0.5 + neckH + headH * 0.42);
+    this.headSprite.setY(this.headY);
+
+    // Position hat above head
+    this.hatY = this.headY - headH * 0.42;
+    this.hatGfx.setY(this.hatY);
 
     // Create container
     this.sprite = scene.add.container(ANDROGENIC.X, ANDROGENIC.Y, [
-      this.gfxNormal,
-      this.gfxExposed,
+      this.leftArmGfx,
+      this.rightArmGfx,
+      this.bodyGfx,
+      this.headSprite,
+      this.hatGfx,
     ]);
 
     // Store reference
     this.sprite.entity = this;
+
+    // Idle breathing tween
+    this.breathTween = scene.tweens.add({
+      targets: this.bodyGfx,
+      y: { from: 0, to: -C.U * 0.3 },
+      duration: 1400,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+
+    // Head bobble
+    this.headBobTween = scene.tweens.add({
+      targets: this.headSprite,
+      y: { from: this.headY, to: this.headY - C.U * 0.5 },
+      duration: 1400,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+      delay: 80,
+    });
+
+    // Hat follows head bob
+    this.hatBobTween = scene.tweens.add({
+      targets: this.hatGfx,
+      y: { from: this.hatY, to: this.hatY - C.U * 0.5 },
+      duration: 1400,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+      delay: 80,
+    });
   }
 
-  drawCharacter(gfx, wigExposed) {
-    const w = ANDROGENIC.WIDTH;
-    const h = ANDROGENIC.HEIGHT;
-    const cx = 0;
+  drawBody(gfx, C, BS) {
+    const skinColor = 0xE8C8A0;
+    const shirtColor = 0x1A3A5C;  // Dark blue t-shirt
+    const pantsColor = 0x1A1A3E;  // Dark pants
+    const shoeColor = 0x111111;   // Dark shoes
 
-    if (!wigExposed) {
-      // --- Cap/Hat ---
-      gfx.fillStyle(ANDROGENIC.COLOR_CAP, 1);
-      // Cap top
-      gfx.fillRoundedRect(cx - w * 0.22, -h * 0.50, w * 0.44, h * 0.10, 4 * PX);
-      // Cap brim (wider)
-      gfx.fillRect(cx - w * 0.30, -h * 0.41, w * 0.60, h * 0.03);
-    } else {
-      // --- Bald head with sparse hair strands ---
-      gfx.fillStyle(ANDROGENIC.COLOR_BALD, 1);
-      gfx.fillRoundedRect(cx - w * 0.18, -h * 0.50, w * 0.36, h * 0.12, 6 * PX);
-      // Receding hairline -- sparse strands
-      gfx.lineStyle(1.5 * PX, ANDROGENIC.COLOR_WIG, 0.7);
-      for (let i = -3; i <= 3; i++) {
-        const sx = cx + i * w * 0.04;
-        gfx.beginPath();
-        gfx.moveTo(sx, -h * 0.50);
-        gfx.lineTo(sx + w * 0.01, -h * 0.55);
-        gfx.strokePath();
-      }
-    }
-
-    // --- Head (skin tone) ---
-    gfx.fillStyle(ANDROGENIC.COLOR_SKIN, 1);
-    gfx.fillRoundedRect(cx - w * 0.16, -h * 0.42, w * 0.32, h * 0.16, 5 * PX);
-
-    // --- Eyes (slightly menacing) ---
-    gfx.fillStyle(0x000000, 1);
-    gfx.fillCircle(cx - w * 0.07, -h * 0.35, 2.5 * PX);
-    gfx.fillCircle(cx + w * 0.07, -h * 0.35, 2.5 * PX);
-    // Eyebrows (angled down = menacing)
-    gfx.lineStyle(2 * PX, 0x000000, 1);
-    gfx.beginPath();
-    gfx.moveTo(cx - w * 0.12, -h * 0.39);
-    gfx.lineTo(cx - w * 0.03, -h * 0.38);
-    gfx.strokePath();
-    gfx.beginPath();
-    gfx.moveTo(cx + w * 0.12, -h * 0.39);
-    gfx.lineTo(cx + w * 0.03, -h * 0.38);
-    gfx.strokePath();
-
-    // --- Smirk ---
-    gfx.lineStyle(1.5 * PX, 0x000000, 0.8);
-    gfx.beginPath();
-    gfx.moveTo(cx - w * 0.06, -h * 0.30);
-    gfx.lineTo(cx + w * 0.06, -h * 0.31);
-    gfx.lineTo(cx + w * 0.08, -h * 0.32);
-    gfx.strokePath();
+    const torsoH = C.TORSO_H * BS;
+    const shoulderW = C.SHOULDER_W * BS;
+    const waistW = C.WAIST_W * BS;
+    const neckW = C.NECK_W * BS;
+    const neckH = C.NECK_H * BS;
+    const legW = C.LEG_W * BS;
+    const legH = C.LEG_H * BS;
+    const legGap = C.LEG_GAP * BS;
+    const shoeW = C.SHOE_W * BS;
+    const shoeH = C.SHOE_H * BS;
 
     // --- Neck (thick) ---
-    gfx.fillStyle(ANDROGENIC.COLOR_SKIN, 1);
-    gfx.fillRect(cx - w * 0.08, -h * 0.27, w * 0.16, h * 0.06);
+    gfx.fillStyle(skinColor, 1);
+    gfx.fillRect(-neckW / 2, -torsoH * 0.5 - neckH, neckW, neckH);
 
-    // --- Shoulders (broad, tall frame) ---
-    gfx.fillStyle(ANDROGENIC.COLOR_BODY, 1);
-    // Left shoulder
-    gfx.fillTriangle(
-      cx - w * 0.45, -h * 0.18,
-      cx - w * 0.10, -h * 0.22,
-      cx - w * 0.40, -h * 0.06
-    );
-    // Right shoulder
-    gfx.fillTriangle(
-      cx + w * 0.45, -h * 0.18,
-      cx + w * 0.10, -h * 0.22,
-      cx + w * 0.40, -h * 0.06
-    );
-
-    // --- Torso (large, V-shape for tall frame) ---
-    gfx.fillStyle(ANDROGENIC.COLOR_BODY, 1);
+    // --- Torso (dark blue t-shirt, broad) ---
+    gfx.fillStyle(shirtColor, 1);
     gfx.beginPath();
-    gfx.moveTo(cx - w * 0.38, -h * 0.16);
-    gfx.lineTo(cx + w * 0.38, -h * 0.16);
-    gfx.lineTo(cx + w * 0.25, h * 0.12);
-    gfx.lineTo(cx - w * 0.25, h * 0.12);
+    gfx.moveTo(-shoulderW / 2, -torsoH * 0.5);
+    gfx.lineTo(shoulderW / 2, -torsoH * 0.5);
+    gfx.lineTo(waistW / 2, torsoH * 0.5);
+    gfx.lineTo(-waistW / 2, torsoH * 0.5);
     gfx.closePath();
     gfx.fillPath();
 
-    // --- Arms ---
-    gfx.fillStyle(ANDROGENIC.COLOR_SKIN, 1);
-    gfx.fillRoundedRect(cx - w * 0.45, -h * 0.12, w * 0.10, h * 0.28, 3 * PX);
-    gfx.fillRoundedRect(cx + w * 0.35, -h * 0.12, w * 0.10, h * 0.28, 3 * PX);
+    // T-shirt collar
+    gfx.lineStyle(2 * PX, 0x0F2A45, 0.8);
+    gfx.beginPath();
+    gfx.moveTo(-neckW * 0.8, -torsoH * 0.48);
+    gfx.lineTo(0, -torsoH * 0.38);
+    gfx.lineTo(neckW * 0.8, -torsoH * 0.48);
+    gfx.strokePath();
 
     // --- Legs ---
-    gfx.fillStyle(0x1A1A3E, 1); // Dark pants
-    gfx.fillRoundedRect(cx - w * 0.22, h * 0.12, w * 0.18, h * 0.32, 3 * PX);
-    gfx.fillRoundedRect(cx + w * 0.04, h * 0.12, w * 0.18, h * 0.32, 3 * PX);
+    const legTop = torsoH * 0.5;
+    gfx.fillStyle(pantsColor, 1);
+    gfx.fillRoundedRect(-legGap / 2 - legW, legTop, legW, legH, 3 * PX);
+    gfx.fillRoundedRect(legGap / 2, legTop, legW, legH, 3 * PX);
 
     // --- Shoes ---
-    gfx.fillStyle(0x111111, 1);
-    gfx.fillRoundedRect(cx - w * 0.24, h * 0.41, w * 0.22, h * 0.06, 2 * PX);
-    gfx.fillRoundedRect(cx + w * 0.02, h * 0.41, w * 0.22, h * 0.06, 2 * PX);
+    const shoeTop = legTop + legH;
+    gfx.fillStyle(shoeColor, 1);
+    gfx.fillRoundedRect(-legGap / 2 - shoeW, shoeTop, shoeW, shoeH, 2 * PX);
+    gfx.fillRoundedRect(legGap / 2, shoeTop, shoeW, shoeH, 2 * PX);
+  }
+
+  drawLeftArm(gfx, C, BS) {
+    const skinColor = 0xE8C8A0;
+    const shirtColor = 0x1A3A5C;
+    const shoulderW = C.SHOULDER_W * BS;
+    const armW = C.UPPER_ARM_W * BS;
+    const armH = C.UPPER_ARM_H * BS;
+    const handW = C.HAND_W * BS;
+    const handH = C.HAND_H * BS;
+    const torsoH = C.TORSO_H * BS;
+
+    // T-shirt sleeve
+    const armX = -shoulderW / 2 - armW * 0.3;
+    const armY = -torsoH * 0.45;
+    gfx.fillStyle(shirtColor, 1);
+    gfx.fillRoundedRect(armX, armY, armW, armH * 0.5, 3 * PX);
+
+    // Bare forearm (skin)
+    gfx.fillStyle(skinColor, 1);
+    gfx.fillRoundedRect(armX, armY + armH * 0.45, armW, armH * 0.55, 3 * PX);
+
+    // Hand
+    gfx.fillRoundedRect(
+      armX + armW * 0.1,
+      armY + armH,
+      handW,
+      handH,
+      2 * PX
+    );
+  }
+
+  drawRightArm(gfx, C, BS) {
+    const skinColor = 0xE8C8A0;
+    const shirtColor = 0x1A3A5C;
+    const shoulderW = C.SHOULDER_W * BS;
+    const armW = C.UPPER_ARM_W * BS;
+    const armH = C.UPPER_ARM_H * BS;
+    const handW = C.HAND_W * BS;
+    const handH = C.HAND_H * BS;
+    const torsoH = C.TORSO_H * BS;
+
+    const armX = shoulderW / 2 - armW * 0.7;
+    const armY = -torsoH * 0.45;
+    gfx.fillStyle(shirtColor, 1);
+    gfx.fillRoundedRect(armX, armY, armW, armH * 0.5, 3 * PX);
+
+    gfx.fillStyle(skinColor, 1);
+    gfx.fillRoundedRect(armX, armY + armH * 0.45, armW, armH * 0.55, 3 * PX);
+
+    // Hand
+    gfx.fillRoundedRect(
+      armX + armW * 0.1,
+      armY + armH,
+      handW,
+      handH,
+      2 * PX
+    );
+  }
+
+  drawHat(gfx, C, BS) {
+    const headH = C.HEAD_H * BS;
+    const headW = headH * (C.FRAME_W / C.FRAME_H);
+    const capColor = 0x333333;
+
+    // Baseball cap on top of head
+    gfx.fillStyle(capColor, 1);
+    // Cap dome
+    gfx.fillRoundedRect(-headW * 0.30, -headH * 0.12, headW * 0.60, headH * 0.14, 5 * PX);
+    // Brim (wider, extending forward)
+    gfx.fillRect(-headW * 0.38, headH * 0.01, headW * 0.76, headH * 0.05);
+  }
+
+  /**
+   * Set facial expression on the head sprite.
+   * Reverts to NORMAL after holdMs (default EXPRESSION_HOLD_MS).
+   */
+  setExpression(expression, holdMs = EXPRESSION_HOLD_MS) {
+    if (this._expressionTimer) {
+      clearTimeout(this._expressionTimer);
+      this._expressionTimer = null;
+    }
+    this.currentExpression = expression;
+    this.headSprite.setFrame(expression);
+
+    if (expression !== EXPRESSION.NORMAL) {
+      this._expressionTimer = setTimeout(() => {
+        this.currentExpression = EXPRESSION.NORMAL;
+        this.headSprite.setFrame(EXPRESSION.NORMAL);
+        this._expressionTimer = null;
+      }, holdMs);
+    }
   }
 
   update(delta) {
@@ -140,12 +255,27 @@ export class Androgenic {
 
   /**
    * Expose the wig (hat flies off) during frame mog.
+   * Sets surprised expression, animates hat flying off, then restores.
    */
   exposeWig(duration) {
     if (this.wigExposed) return;
     this.wigExposed = true;
-    this.gfxNormal.setVisible(false);
-    this.gfxExposed.setVisible(true);
+
+    // Set surprised expression
+    this.setExpression(EXPRESSION.SURPRISED, duration);
+
+    // Stop hat bob tween temporarily
+    if (this.hatBobTween) this.hatBobTween.pause();
+
+    // Animate hat flying off (upward and rotating)
+    this.scene.tweens.add({
+      targets: this.hatGfx,
+      y: this.hatY - 200 * PX,
+      angle: 360,
+      alpha: 0,
+      duration: 500,
+      ease: 'Power2',
+    });
 
     eventBus.emit(Events.ANDROGENIC_WIG_EXPOSED);
 
@@ -162,13 +292,26 @@ export class Androgenic {
     if (this.wigTimer) clearTimeout(this.wigTimer);
     this.wigTimer = setTimeout(() => {
       this.wigExposed = false;
-      this.gfxNormal.setVisible(true);
-      this.gfxExposed.setVisible(false);
+
+      // Bring hat back
+      this.hatGfx.setAlpha(1);
+      this.hatGfx.setAngle(0);
+      this.hatGfx.setY(this.hatY);
+
+      // Resume hat bob
+      if (this.hatBobTween) this.hatBobTween.resume();
     }, duration);
   }
 
   destroy() {
     if (this.wigTimer) clearTimeout(this.wigTimer);
+    if (this._expressionTimer) {
+      clearTimeout(this._expressionTimer);
+      this._expressionTimer = null;
+    }
+    if (this.breathTween) this.breathTween.destroy();
+    if (this.headBobTween) this.headBobTween.destroy();
+    if (this.hatBobTween) this.hatBobTween.destroy();
     this.sprite.destroy();
   }
 }

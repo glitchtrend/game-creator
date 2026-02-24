@@ -45,11 +45,46 @@ export const SAFE_ZONE = {
   RIGHT: 0,
 };
 
+// --- Expression System ---
+export const EXPRESSION = {
+  NORMAL: 0,
+  HAPPY: 1,
+  ANGRY: 2,
+  SURPRISED: 3,
+};
+
+export const EXPRESSION_HOLD_MS = 600;
+
+// --- Character Bobblehead Sizing ---
+const _U = _canvasW * 0.012;
+
+export const CHARACTER = {
+  U: _U,
+  TORSO_H: _U * 5,
+  SHOULDER_W: _U * 7,
+  WAIST_W: _U * 5,
+  NECK_W: _U * 2.5,
+  NECK_H: _U * 1,
+  HEAD_H: _canvasW * 0.22,  // Large bobblehead for this game
+  FRAME_W: 200,
+  FRAME_H: 300,
+  UPPER_ARM_W: _U * 1.8,
+  UPPER_ARM_H: _U * 3,
+  HAND_W: _U * 1.8,
+  HAND_H: _U * 1.5,
+  LEG_W: _U * 2.4,
+  LEG_H: _U * 3,
+  LEG_GAP: _U * 1.2,
+  SHOE_W: _U * 3,
+  SHOE_H: _U * 1.2,
+  OUTLINE: Math.max(1, Math.round(_U * 0.3)),
+};
+
 // --- Clavicular (Player) ---
 
 export const CLAVICULAR = {
-  WIDTH: _canvasW * 0.10,
-  HEIGHT: _canvasW * 0.10 * 1.8, // Lean figure, taller than wide
+  WIDTH: _canvasW * 0.14,
+  HEIGHT: _canvasW * 0.14 * 1.8, // Lean figure, taller than wide
   START_X: _canvasW * 0.5,
   START_Y: _canvasH * 0.82,
   SPEED: 350 * PX,
@@ -63,8 +98,8 @@ export const CLAVICULAR = {
 // --- Androgenic (Opponent NPC) ---
 
 export const ANDROGENIC = {
-  WIDTH: _canvasW * 0.12,
-  HEIGHT: _canvasW * 0.12 * 2.0, // Tall (6'5")
+  WIDTH: _canvasW * 0.16,
+  HEIGHT: _canvasW * 0.16 * 2.0, // Tall (6'5")
   X: _canvasW * 0.5,
   Y: _canvasH * 0.18,            // Top of screen, below safe zone
   COLOR_BODY: 0x1A3A5C,          // Dark blue body
@@ -81,17 +116,17 @@ export const ANDROGENIC = {
 // --- Projectiles ---
 
 export const PROJECTILE = {
-  // Attacks (thrown by Androgenic)
-  ATTACK_WIDTH: _canvasW * 0.05,
-  ATTACK_HEIGHT: _canvasW * 0.04,
+  // Attacks (thrown by Androgenic) — sized up 20% for visibility
+  ATTACK_WIDTH: _canvasW * 0.06,
+  ATTACK_HEIGHT: _canvasW * 0.048,
   ATTACK_SPEED_MIN: 150 * PX,
   ATTACK_SPEED_MAX: 280 * PX,
   ATTACK_COLOR_WIG: 0x5C3317,     // Brown wig
   ATTACK_COLOR_HAT: 0x333333,     // Dark cap/hat
 
-  // Power-ups (falling collectibles)
-  POWERUP_WIDTH: _canvasW * 0.04,
-  POWERUP_HEIGHT: _canvasW * 0.06,
+  // Power-ups (falling collectibles) — sized up 20% for visibility
+  POWERUP_WIDTH: _canvasW * 0.048,
+  POWERUP_HEIGHT: _canvasW * 0.072,
   POWERUP_SPEED_MIN: 100 * PX,
   POWERUP_SPEED_MAX: 200 * PX,
   POWERUP_COLOR_SHAKE: 0x22CC55,  // Bright green protein shake

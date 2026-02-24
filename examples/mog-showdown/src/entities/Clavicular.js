@@ -1,162 +1,195 @@
 import Phaser from 'phaser';
-import { CLAVICULAR, GAME, PX } from '../core/Constants.js';
+import { CLAVICULAR, GAME, PX, CHARACTER, EXPRESSION, EXPRESSION_HOLD_MS } from '../core/Constants.js';
 import { eventBus, Events } from '../core/EventBus.js';
 
 /**
  * Clavicular -- the player character.
- * A lean figure with prominent angular shoulders/collarbones, sharp jawline,
- * and styled-up hair. Gold/amber tones. "The clavicle guy."
+ * Photo-composite bobblehead: cartoon South Park-style body + photo head sprite.
+ * Gold/amber tank top (showing off collarbones), dark navy pants, white sneakers.
+ * "The clavicle guy."
  */
 export class Clavicular {
   constructor(scene) {
     this.scene = scene;
     this.facingRight = true;
+    this.currentExpression = EXPRESSION.NORMAL;
+    this._expressionTimer = null;
 
-    // Build the character using Graphics API
-    const gfx = scene.add.graphics();
-    this.drawCharacter(gfx);
+    const C = CHARACTER;
 
-    // Create physics container
-    this.sprite = scene.add.container(CLAVICULAR.START_X, CLAVICULAR.START_Y, [gfx]);
+    // --- Layer order: left arm (behind), right arm (behind), body, head (front) ---
+
+    // Left arm graphics (behind body)
+    this.leftArmGfx = scene.add.graphics();
+    this.drawLeftArm(this.leftArmGfx, C);
+
+    // Right arm graphics (behind body)
+    this.rightArmGfx = scene.add.graphics();
+    this.drawRightArm(this.rightArmGfx, C);
+
+    // Body graphics (torso, legs, shoes)
+    this.bodyGfx = scene.add.graphics();
+    this.drawBody(this.bodyGfx, C);
+
+    // Head sprite (photo spritesheet on top)
+    this.headSprite = scene.add.sprite(0, 0, 'clavicular-head', EXPRESSION.NORMAL);
+    const headScale = C.HEAD_H / C.FRAME_H;
+    this.headSprite.setScale(headScale);
+    // Position head above the torso
+    const headY = -(C.TORSO_H * 0.5 + C.NECK_H + C.HEAD_H * 0.42);
+    this.headSprite.setY(headY);
+
+    // Create physics container with all parts
+    this.sprite = scene.add.container(CLAVICULAR.START_X, CLAVICULAR.START_Y, [
+      this.leftArmGfx,
+      this.rightArmGfx,
+      this.bodyGfx,
+      this.headSprite,
+    ]);
     scene.physics.add.existing(this.sprite);
 
     this.sprite.body.setSize(CLAVICULAR.WIDTH * 0.8, CLAVICULAR.HEIGHT * 0.85);
     this.sprite.body.setOffset(-CLAVICULAR.WIDTH * 0.4, -CLAVICULAR.HEIGHT * 0.5);
     this.sprite.body.setCollideWorldBounds(true);
-    // No gravity on player -- horizontal movement only
     this.sprite.body.setAllowGravity(false);
 
     // Store reference for collision detection
     this.sprite.entity = this;
+
+    // Idle breathing tween (gentle bobbing)
+    this.breathTween = scene.tweens.add({
+      targets: this.bodyGfx,
+      y: { from: 0, to: -C.U * 0.4 },
+      duration: 1200,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+
+    // Head also bobs slightly (offset from body bob for natural feel)
+    this.headBobTween = scene.tweens.add({
+      targets: this.headSprite,
+      y: { from: headY, to: headY - C.U * 0.6 },
+      duration: 1200,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+      delay: 100, // Slight delay for bobblehead lag
+    });
   }
 
-  drawCharacter(gfx) {
-    const w = CLAVICULAR.WIDTH;
-    const h = CLAVICULAR.HEIGHT;
-    const cx = 0; // Centered in container
-
-    // --- Hair (styled up, dark) ---
-    gfx.fillStyle(CLAVICULAR.COLOR_HAIR, 1);
-    // Main hair block (tall, styled up)
-    gfx.fillRoundedRect(cx - w * 0.18, -h * 0.50, w * 0.36, h * 0.15, 4 * PX);
-    // Hair spike left
-    gfx.fillTriangle(
-      cx - w * 0.16, -h * 0.50,
-      cx - w * 0.08, -h * 0.58,
-      cx - w * 0.02, -h * 0.50
-    );
-    // Hair spike center
-    gfx.fillTriangle(
-      cx - w * 0.06, -h * 0.50,
-      cx + w * 0.02, -h * 0.56,
-      cx + w * 0.10, -h * 0.50
-    );
-    // Hair spike right
-    gfx.fillTriangle(
-      cx + w * 0.04, -h * 0.50,
-      cx + w * 0.14, -h * 0.55,
-      cx + w * 0.20, -h * 0.50
-    );
-
-    // --- Head (skin tone, angular jaw) ---
-    gfx.fillStyle(CLAVICULAR.COLOR_SKIN, 1);
-    // Head oval
-    gfx.fillRoundedRect(cx - w * 0.15, -h * 0.42, w * 0.30, h * 0.18, 6 * PX);
-    // Sharp jaw (triangle pointing down)
-    gfx.fillStyle(CLAVICULAR.COLOR_JAW, 1);
-    gfx.fillTriangle(
-      cx - w * 0.12, -h * 0.26,
-      cx, -h * 0.18,
-      cx + w * 0.12, -h * 0.26
-    );
-    // Jaw fill (skin)
-    gfx.fillStyle(CLAVICULAR.COLOR_SKIN, 1);
-    gfx.fillTriangle(
-      cx - w * 0.10, -h * 0.27,
-      cx, -h * 0.20,
-      cx + w * 0.10, -h * 0.27
-    );
-
-    // --- Eyes (small, intense) ---
-    gfx.fillStyle(0x000000, 1);
-    gfx.fillCircle(cx - w * 0.06, -h * 0.34, 2 * PX);
-    gfx.fillCircle(cx + w * 0.06, -h * 0.34, 2 * PX);
+  drawBody(gfx, C) {
+    const skinColor = 0xF5D0A9;
+    const tankTopColor = 0xD4A017; // Gold/amber tank top
+    const pantsColor = 0x2C2C54;  // Dark navy pants
+    const shoeColor = 0xFFFFFF;   // White sneakers
 
     // --- Neck ---
-    gfx.fillStyle(CLAVICULAR.COLOR_SKIN, 1);
-    gfx.fillRect(cx - w * 0.06, -h * 0.22, w * 0.12, h * 0.06);
+    gfx.fillStyle(skinColor, 1);
+    gfx.fillRect(-C.NECK_W / 2, -C.TORSO_H * 0.5 - C.NECK_H, C.NECK_W, C.NECK_H);
 
-    // --- CLAVICLES (the signature feature) ---
-    // Prominent angular shoulder bones extending outward
-    gfx.lineStyle(3 * PX, CLAVICULAR.COLOR_CLAVICLE, 1);
-    // Left clavicle
+    // --- Torso (tapered tank top) ---
+    gfx.fillStyle(tankTopColor, 1);
     gfx.beginPath();
-    gfx.moveTo(cx - w * 0.04, -h * 0.16);
-    gfx.lineTo(cx - w * 0.38, -h * 0.22);
-    gfx.strokePath();
-    // Right clavicle
-    gfx.beginPath();
-    gfx.moveTo(cx + w * 0.04, -h * 0.16);
-    gfx.lineTo(cx + w * 0.38, -h * 0.22);
-    gfx.strokePath();
-
-    // Clavicle bone bumps (small circles at endpoints)
-    gfx.fillStyle(CLAVICULAR.COLOR_CLAVICLE, 1);
-    gfx.fillCircle(cx - w * 0.38, -h * 0.22, 3 * PX);
-    gfx.fillCircle(cx + w * 0.38, -h * 0.22, 3 * PX);
-
-    // --- Shoulders (angular, wide) ---
-    gfx.fillStyle(CLAVICULAR.COLOR_BODY, 1);
-    // Left shoulder
-    gfx.fillTriangle(
-      cx - w * 0.40, -h * 0.20,
-      cx - w * 0.10, -h * 0.16,
-      cx - w * 0.35, -h * 0.06
-    );
-    // Right shoulder
-    gfx.fillTriangle(
-      cx + w * 0.40, -h * 0.20,
-      cx + w * 0.10, -h * 0.16,
-      cx + w * 0.35, -h * 0.06
-    );
-
-    // --- Torso (lean, V-shape) ---
-    gfx.fillStyle(CLAVICULAR.COLOR_BODY, 1);
-    // Main torso (tapered rectangle)
-    gfx.beginPath();
-    gfx.moveTo(cx - w * 0.30, -h * 0.12);
-    gfx.lineTo(cx + w * 0.30, -h * 0.12);
-    gfx.lineTo(cx + w * 0.18, h * 0.15);
-    gfx.lineTo(cx - w * 0.18, h * 0.15);
+    gfx.moveTo(-C.SHOULDER_W / 2, -C.TORSO_H * 0.5);
+    gfx.lineTo(C.SHOULDER_W / 2, -C.TORSO_H * 0.5);
+    gfx.lineTo(C.WAIST_W / 2, C.TORSO_H * 0.5);
+    gfx.lineTo(-C.WAIST_W / 2, C.TORSO_H * 0.5);
     gfx.closePath();
     gfx.fillPath();
 
-    // --- Tank top neckline detail ---
-    gfx.lineStyle(2 * PX, 0xB8860B, 0.8);
+    // Tank top neckline V-cut detail
+    gfx.lineStyle(2 * PX, 0xB8860B, 0.9);
     gfx.beginPath();
-    gfx.moveTo(cx - w * 0.15, -h * 0.14);
-    gfx.lineTo(cx, -h * 0.08);
-    gfx.lineTo(cx + w * 0.15, -h * 0.14);
+    gfx.moveTo(-C.SHOULDER_W * 0.25, -C.TORSO_H * 0.48);
+    gfx.lineTo(0, -C.TORSO_H * 0.2);
+    gfx.lineTo(C.SHOULDER_W * 0.25, -C.TORSO_H * 0.48);
     gfx.strokePath();
 
-    // --- Arms ---
-    gfx.fillStyle(CLAVICULAR.COLOR_SKIN, 1);
-    // Left arm
-    gfx.fillRoundedRect(cx - w * 0.40, -h * 0.10, w * 0.10, h * 0.25, 3 * PX);
-    // Right arm
-    gfx.fillRoundedRect(cx + w * 0.30, -h * 0.10, w * 0.10, h * 0.25, 3 * PX);
+    // Clavicle bone lines (the signature feature)
+    gfx.lineStyle(2.5 * PX, 0xE8C860, 0.85);
+    // Left clavicle
+    gfx.beginPath();
+    gfx.moveTo(-C.NECK_W * 0.3, -C.TORSO_H * 0.45);
+    gfx.lineTo(-C.SHOULDER_W * 0.45, -C.TORSO_H * 0.38);
+    gfx.strokePath();
+    // Right clavicle
+    gfx.beginPath();
+    gfx.moveTo(C.NECK_W * 0.3, -C.TORSO_H * 0.45);
+    gfx.lineTo(C.SHOULDER_W * 0.45, -C.TORSO_H * 0.38);
+    gfx.strokePath();
 
     // --- Legs ---
-    gfx.fillStyle(0x2C2C54, 1); // Dark pants
+    const legTop = C.TORSO_H * 0.5;
+    gfx.fillStyle(pantsColor, 1);
     // Left leg
-    gfx.fillRoundedRect(cx - w * 0.16, h * 0.15, w * 0.14, h * 0.30, 3 * PX);
+    gfx.fillRoundedRect(-C.LEG_GAP / 2 - C.LEG_W, legTop, C.LEG_W, C.LEG_H, 3 * PX);
     // Right leg
-    gfx.fillRoundedRect(cx + w * 0.02, h * 0.15, w * 0.14, h * 0.30, 3 * PX);
+    gfx.fillRoundedRect(C.LEG_GAP / 2, legTop, C.LEG_W, C.LEG_H, 3 * PX);
 
     // --- Shoes ---
-    gfx.fillStyle(0xFFFFFF, 1);
-    gfx.fillRoundedRect(cx - w * 0.18, h * 0.42, w * 0.17, h * 0.06, 2 * PX);
-    gfx.fillRoundedRect(cx + w * 0.01, h * 0.42, w * 0.17, h * 0.06, 2 * PX);
+    const shoeTop = legTop + C.LEG_H;
+    gfx.fillStyle(shoeColor, 1);
+    // Left shoe
+    gfx.fillRoundedRect(-C.LEG_GAP / 2 - C.SHOE_W, shoeTop, C.SHOE_W, C.SHOE_H, 2 * PX);
+    // Right shoe
+    gfx.fillRoundedRect(C.LEG_GAP / 2, shoeTop, C.SHOE_W, C.SHOE_H, 2 * PX);
+  }
+
+  drawLeftArm(gfx, C) {
+    const skinColor = 0xF5D0A9;
+    // Upper arm (skin -- tank top shows bare arms)
+    gfx.fillStyle(skinColor, 1);
+    const armX = -C.SHOULDER_W / 2 - C.UPPER_ARM_W * 0.3;
+    const armY = -C.TORSO_H * 0.45;
+    gfx.fillRoundedRect(armX, armY, C.UPPER_ARM_W, C.UPPER_ARM_H, 3 * PX);
+
+    // Hand
+    gfx.fillRoundedRect(
+      armX + C.UPPER_ARM_W * 0.1,
+      armY + C.UPPER_ARM_H,
+      C.HAND_W,
+      C.HAND_H,
+      2 * PX
+    );
+  }
+
+  drawRightArm(gfx, C) {
+    const skinColor = 0xF5D0A9;
+    gfx.fillStyle(skinColor, 1);
+    const armX = C.SHOULDER_W / 2 - C.UPPER_ARM_W * 0.7;
+    const armY = -C.TORSO_H * 0.45;
+    gfx.fillRoundedRect(armX, armY, C.UPPER_ARM_W, C.UPPER_ARM_H, 3 * PX);
+
+    // Hand
+    gfx.fillRoundedRect(
+      armX + C.UPPER_ARM_W * 0.1,
+      armY + C.UPPER_ARM_H,
+      C.HAND_W,
+      C.HAND_H,
+      2 * PX
+    );
+  }
+
+  /**
+   * Set facial expression on the head sprite.
+   * Reverts to NORMAL after holdMs (default EXPRESSION_HOLD_MS).
+   */
+  setExpression(expression, holdMs = EXPRESSION_HOLD_MS) {
+    if (this._expressionTimer) {
+      clearTimeout(this._expressionTimer);
+      this._expressionTimer = null;
+    }
+    this.currentExpression = expression;
+    this.headSprite.setFrame(expression);
+
+    if (expression !== EXPRESSION.NORMAL) {
+      this._expressionTimer = setTimeout(() => {
+        this.currentExpression = EXPRESSION.NORMAL;
+        this.headSprite.setFrame(EXPRESSION.NORMAL);
+        this._expressionTimer = null;
+      }, holdMs);
+    }
   }
 
   update(left, right) {
@@ -206,9 +239,16 @@ export class Clavicular {
     this.sprite.setAlpha(1);
     this.sprite.setScale(1, 1);
     this.facingRight = true;
+    this.setExpression(EXPRESSION.NORMAL);
   }
 
   destroy() {
+    if (this._expressionTimer) {
+      clearTimeout(this._expressionTimer);
+      this._expressionTimer = null;
+    }
+    if (this.breathTween) this.breathTween.destroy();
+    if (this.headBobTween) this.headBobTween.destroy();
     this.sprite.destroy();
   }
 }

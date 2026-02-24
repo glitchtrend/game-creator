@@ -64,6 +64,10 @@ export class Projectile {
     const w = PROJECTILE.ATTACK_WIDTH;
     const h = PROJECTILE.ATTACK_HEIGHT;
 
+    // Glow outline
+    gfx.lineStyle(3 * PX, PROJECTILE.ATTACK_COLOR_WIG, 0.3);
+    gfx.strokeRoundedRect(-w * 0.44, -h * 0.34, w * 0.88, h * 0.58, 5 * PX);
+
     // Wavy wig shape (brown)
     gfx.fillStyle(PROJECTILE.ATTACK_COLOR_WIG, 1);
     // Main wig body
@@ -81,6 +85,10 @@ export class Projectile {
     const w = PROJECTILE.ATTACK_WIDTH;
     const h = PROJECTILE.ATTACK_HEIGHT;
 
+    // Glow outline
+    gfx.lineStyle(3 * PX, PROJECTILE.ATTACK_COLOR_HAT, 0.3);
+    gfx.strokeRoundedRect(-w * 0.34, -h * 0.44, w * 0.68, h * 0.58, 7 * PX);
+
     // Baseball cap shape (dark)
     gfx.fillStyle(PROJECTILE.ATTACK_COLOR_HAT, 1);
     // Cap dome
@@ -95,6 +103,10 @@ export class Projectile {
   drawShake(gfx) {
     const w = PROJECTILE.POWERUP_WIDTH;
     const h = PROJECTILE.POWERUP_HEIGHT;
+
+    // Glow outline
+    gfx.lineStyle(3 * PX, PROJECTILE.POWERUP_COLOR_SHAKE, 0.3);
+    gfx.strokeRoundedRect(-w * 0.34, -h * 0.46, w * 0.68, h * 0.92, 5 * PX);
 
     // Protein shake bottle (bright green)
     gfx.fillStyle(PROJECTILE.POWERUP_COLOR_SHAKE, 1);
@@ -116,6 +128,10 @@ export class Projectile {
   drawDumbbell(gfx) {
     const w = PROJECTILE.POWERUP_WIDTH;
     const h = PROJECTILE.POWERUP_HEIGHT;
+
+    // Glow outline
+    gfx.lineStyle(3 * PX, PROJECTILE.POWERUP_COLOR_DUMBBELL, 0.3);
+    gfx.strokeRoundedRect(-w * 0.50, -h * 0.20, w * 1.0, h * 0.40, 4 * PX);
 
     // Pink dumbbell
     gfx.fillStyle(PROJECTILE.POWERUP_COLOR_DUMBBELL, 1);
