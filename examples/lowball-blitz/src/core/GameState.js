@@ -25,8 +25,10 @@ class GameState {
     this.housesHit = 0;
     this.totalThrown = 0;
 
-    // Audio
-    this.isMuted = false;
+    // Audio -- persist mute preference across sessions
+    if (this.isMuted === undefined) {
+      try { this.isMuted = localStorage.getItem('lowball-blitz-muted') === 'true'; } catch (_) { this.isMuted = false; }
+    }
 
     // Combo timer
     this._comboTimer = 0;

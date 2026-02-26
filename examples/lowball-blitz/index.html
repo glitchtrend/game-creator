@@ -160,6 +160,32 @@
       pointer-events: none;
     }
 
+    /* Mute button */
+    #mute-btn {
+      position: fixed;
+      bottom: max(20px, 3vh);
+      left: 16px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.35);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      font-size: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 16;
+      cursor: pointer;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: background 0.2s;
+      line-height: 1;
+    }
+    #mute-btn:hover { background: rgba(0, 0, 0, 0.55); }
+    #mute-btn:active { background: rgba(0, 0, 0, 0.7); }
+
     /* Mobile hint text */
     #mobile-hints {
       position: fixed;
@@ -202,6 +228,9 @@
 
   <!-- Mobile hints -->
   <div id="mobile-hints">Tap left/right to dodge | Tap right side to throw</div>
+
+  <!-- Mute button -->
+  <button id="mute-btn" aria-label="Mute audio">&#x1F50A;</button>
 
   <script type="module" src="/src/main.js"></script>
 </body>

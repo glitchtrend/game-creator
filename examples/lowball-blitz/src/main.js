@@ -2,8 +2,55 @@ import { Game } from './core/Game.js';
 import { eventBus, Events } from './core/EventBus.js';
 import { gameState } from './core/GameState.js';
 import { IS_MOBILE } from './core/Constants.js';
+import { initAudioBridge } from './audio/AudioBridge.js';
 
 const game = new Game();
+
+// --- Audio ---
+initAudioBridge();
+
+// Init audio on first user interaction (browser autoplay policy)
+let audioInitDone = false;
+function initAudioOnce() {
+  if (audioInitDone) return;
+  audioInitDone = true;
+  eventBus.emit(Events.AUDIO_INIT);
+  // Start gameplay music after init (game auto-starts, no title screen)
+  if (gameState.started && !gameState.gameOver) {
+    eventBus.emit(Events.MUSIC_GAMEPLAY);
+  }
+}
+window.addEventListener('click', initAudioOnce, { once: false });
+window.addEventListener('touchstart', initAudioOnce, { once: false });
+window.addEventListener('keydown', initAudioOnce, { once: false });
+
+// M key toggles mute
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'm' || e.key === 'M') {
+    eventBus.emit(Events.AUDIO_TOGGLE_MUTE);
+  }
+});
+
+// Mute button click handler
+const muteBtn = document.getElementById('mute-btn');
+if (muteBtn) {
+  muteBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    eventBus.emit(Events.AUDIO_TOGGLE_MUTE);
+  });
+  // Set initial icon based on persisted mute state
+  if (gameState.isMuted) {
+    muteBtn.textContent = '\u{1F507}';
+    muteBtn.setAttribute('aria-label', 'Unmute audio');
+  }
+}
+
+// On mobile, shift mute button up above joystick zone
+if (IS_MOBILE) {
+  if (muteBtn) {
+    muteBtn.style.bottom = 'max(140px, calc(3vh + 120px))';
+  }
+}
 
 // Expose for Playwright testing
 window.__GAME__ = game;
