@@ -33,6 +33,40 @@ These GLB files from the Three.js repo have **Idle + Walk + Run** animations and
 | **RobotExpressive** | `https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/RobotExpressive/RobotExpressive.glb` | Idle, Walking, Running, Dance, Jump + 8 more | 464 KB | MIT |
 | **Fox** | `https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Fox/glTF-Binary/Fox.glb` | Survey (idle), Walk, Run | 163 KB | CC0/CC-BY 4.0 |
 
+### Gesture Characters (from `3d-character-library/`)
+
+These characters have **gesture/performance animations** instead of walk/run. Best for standing-position games (debate, dance-off, boxing, rhythm):
+
+| Model | Animations | Faces | Size | License |
+|-------|-----------|-------|------|---------|
+| **Trump** | StillLook (idle), Clap, Dance, Point, Talk, Twist | 1,266 | 1.2 MB | CC-BY (Sketchfab) |
+| **Biden** | 1 Mixamo idle/sway | 50,000 | 3.3 MB | CC-BY (Sketchfab) |
+
+Copy from the character library (no auth needed):
+```bash
+cp <plugin>/3d-character-library/models/trump.glb public/assets/models/
+cp <plugin>/3d-character-library/models/biden.glb public/assets/models/
+```
+
+**Trump clipMap:**
+```js
+{
+  idle: 'root|TrumpStillLook_BipTrump',
+  clap: 'root|TrumpClap1_BipTrump',
+  dance: 'root|Trumpdance1_BipTrump',
+  point: 'root|TrumpPoint_BipTrump',
+  talk: 'root|TrumpTalk1_BipTrump',
+  twist: 'root|TrumpTwist_BipTrump'
+}
+```
+
+**Biden clipMap:**
+```js
+{ idle: 'mixamo.com' }
+```
+
+**Game design for gesture characters:** Since these lack walk/run, design games where characters are stationary — debate battles, dance-offs, boxing rings, rhythm games, or turn-based encounters. Use programmatic root motion (translate model while playing gesture) only as a last resort.
+
 Download with curl — no auth needed:
 ```bash
 curl -L -o public/assets/models/Soldier.glb "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/Soldier.glb"
@@ -82,6 +116,27 @@ node scripts/find-3d-asset.mjs --query "suit man animated walk idle" --max-faces
 - **Fox** — nature/animal
 
 **Multi-character games**: When 2+ characters use the same base model, assign different library models to each (e.g., Soldier for Trump, Xbot for Biden) so players can tell them apart. Note material recoloring opportunities in `MODEL_CONFIG`.
+
+## Sketchfab Token
+
+Sketchfab search is free but **download requires `SKETCHFAB_TOKEN`**. If the token is not set when a Sketchfab download is needed, **ask the user**:
+
+> I need a Sketchfab API token to download this model. You can get one for free:
+> 1. Sign in at https://sketchfab.com
+> 2. Go to https://sketchfab.com/settings/password → "API Token"
+> 3. Copy the token
+>
+> What is your Sketchfab API token?
+
+Then pass it as: `SKETCHFAB_TOKEN=<token> node scripts/find-3d-asset.mjs ...`
+
+For direct Sketchfab downloads by model UID (when you know the exact model):
+```bash
+SKETCHFAB_TOKEN=<token> curl -s -H "Authorization: Token <token>" \
+  "https://api.sketchfab.com/v3/models/<uid>/download" | \
+  python3 -c "import json,sys; print(json.load(sys.stdin)['glb']['url'])"
+# Then curl -L -o model.glb "<url>"
+```
 
 ## Search & Download Script
 
