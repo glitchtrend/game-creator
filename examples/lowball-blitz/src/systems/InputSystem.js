@@ -2,10 +2,11 @@
 // InputSystem.js -- Keyboard + touch input for auto-runner
 //
 // WASD / Arrow keys for left/right lane movement.
-// Space / right-screen tap for throwing envelopes.
+// Space for throwing envelopes.
+// Virtual joystick for mobile movement, dedicated throw button for mobile throw.
 // =============================================================================
 
-import { IS_MOBILE } from '../core/Constants.js';
+const HAS_TOUCH = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
 export class InputSystem {
   constructor() {
@@ -30,66 +31,109 @@ export class InputSystem {
       }
     });
 
-    // Touch input for mobile
-    this._touchThrow = false;
+    // Touch / joystick state
     this._touchLeft = false;
     this._touchRight = false;
-    this._activeTouches = new Map();
 
-    if (IS_MOBILE) {
-      this._setupTouch();
+    // Joystick tracking
+    this._joystickTouchId = null;
+    this._joystickCenterX = 0;
+    this._joystickCenterY = 0;
+    this._joystickDeltaX = 0;
+
+    if (HAS_TOUCH) {
+      this._setupJoystick();
+      this._setupThrowButton();
     }
-
-    // Also support mouse clicks for throw (desktop testing)
-    window.addEventListener('mousedown', (e) => {
-      if (!this._gameActive) return;
-      // Right half of screen = throw
-      if (e.clientX > window.innerWidth / 2) {
-        this._throwJustPressed = true;
-      }
-    });
   }
 
-  _setupTouch() {
-    const handler = (e) => {
-      if (!this._gameActive) return;
-      this._touchLeft = false;
-      this._touchRight = false;
-      this._touchThrow = false;
+  _setupJoystick() {
+    const zone = document.getElementById('joystick-zone');
+    const thumb = document.getElementById('joystick-thumb');
+    if (!zone || !thumb) return;
 
-      for (const touch of e.touches) {
-        const x = touch.clientX;
-        const halfW = window.innerWidth / 2;
+    // Show joystick + throw button on touch devices
+    zone.style.display = 'flex';
+    const throwBtn = document.getElementById('throw-btn');
+    if (throwBtn) throwBtn.style.display = 'flex';
+    const hints = document.getElementById('mobile-hints');
+    if (hints) hints.style.display = 'block';
 
-        if (x > halfW) {
-          // Right half = throw
-          this._touchThrow = true;
-        } else {
-          // Left half = dodge direction based on position within left half
-          const quarterW = halfW / 2;
-          if (x < quarterW) {
-            this._touchLeft = true;
-          } else {
-            this._touchRight = true;
-          }
+    const baseRadius = zone.offsetWidth / 2;
+    const maxDelta = baseRadius * 0.6; // max thumb travel as fraction of base radius
+
+    zone.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (this._joystickTouchId !== null) return; // already tracking a finger
+
+      const touch = e.changedTouches[0];
+      this._joystickTouchId = touch.identifier;
+
+      // Use the center of the joystick zone as reference
+      const rect = zone.getBoundingClientRect();
+      this._joystickCenterX = rect.left + rect.width / 2;
+      this._joystickCenterY = rect.top + rect.height / 2;
+
+      this._updateJoystick(touch.clientX, touch.clientY, thumb, maxDelta);
+    }, { passive: false });
+
+    zone.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      for (const touch of e.changedTouches) {
+        if (touch.identifier === this._joystickTouchId) {
+          this._updateJoystick(touch.clientX, touch.clientY, thumb, maxDelta);
+          break;
+        }
+      }
+    }, { passive: false });
+
+    const endHandler = (e) => {
+      for (const touch of e.changedTouches) {
+        if (touch.identifier === this._joystickTouchId) {
+          this._joystickTouchId = null;
+          this._joystickDeltaX = 0;
+          this._touchLeft = false;
+          this._touchRight = false;
+          // Reset thumb to center
+          thumb.style.transform = 'translate(-50%, -50%)';
+          break;
         }
       }
     };
 
-    window.addEventListener('touchstart', (e) => {
-      handler(e);
-      // Register throw press on touch start (right side)
-      for (const touch of e.changedTouches) {
-        if (touch.clientX > window.innerWidth / 2) {
-          this._throwJustPressed = true;
-        }
-      }
-    }, { passive: true });
+    zone.addEventListener('touchend', endHandler, { passive: true });
+    zone.addEventListener('touchcancel', endHandler, { passive: true });
+  }
 
-    window.addEventListener('touchmove', handler, { passive: true });
-    window.addEventListener('touchend', (e) => {
-      handler(e);
-    }, { passive: true });
+  _updateJoystick(touchX, touchY, thumbEl, maxDelta) {
+    const dx = touchX - this._joystickCenterX;
+    // Clamp delta
+    const clampedDx = Math.max(-maxDelta, Math.min(maxDelta, dx));
+    this._joystickDeltaX = clampedDx / maxDelta; // -1 to 1
+
+    // Move thumb visually
+    const thumbPx = clampedDx;
+    const dy = touchY - this._joystickCenterY;
+    const clampedDy = Math.max(-maxDelta, Math.min(maxDelta, dy));
+    thumbEl.style.transform = `translate(calc(-50% + ${thumbPx}px), calc(-50% + ${clampedDy}px))`;
+
+    // Map to left/right with a dead zone
+    const deadZone = 0.2;
+    this._touchLeft = this._joystickDeltaX < -deadZone;
+    this._touchRight = this._joystickDeltaX > deadZone;
+  }
+
+  _setupThrowButton() {
+    const btn = document.getElementById('throw-btn');
+    if (!btn) return;
+
+    btn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (this._gameActive) {
+        this._throwJustPressed = true;
+      }
+    }, { passive: false });
   }
 
   isDown(code) { return !!this.keys[code]; }
@@ -99,8 +143,7 @@ export class InputSystem {
   }
 
   update() {
-    // throwPressed is consumed once per frame
-    // It will be true for exactly one frame after space/tap
+    // throwPressed is consumed once per frame via the getter
   }
 
   /** Consume the throw input -- returns true only once per press */

@@ -5,6 +5,8 @@
   <link rel="icon" href="data:,">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Lowball Blitz</title>
+  <meta name="x-ogp-key" content="ef96c446-e22e-4626-bd70-833112de9d5a" />
+  <script src="https://sdk.play.fun/latest"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #000; overflow: hidden; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
@@ -199,9 +201,63 @@
       pointer-events: none;
       display: none;
     }
+    /* Loading screen */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      transition: opacity 0.5s;
+    }
+    #loading-screen.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #loading-title {
+      font-size: clamp(28px, 7vmin, 48px);
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    #loading-subtitle {
+      font-size: clamp(12px, 2.5vmin, 18px);
+      color: #aaa;
+      margin-bottom: 32px;
+    }
+    #loading-bar-bg {
+      width: min(280px, 70vw);
+      height: 6px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    #loading-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #6c63ff, #44aaff);
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+    #loading-percent {
+      font-size: 14px;
+      color: #888;
+      margin-top: 12px;
+    }
   </style>
 </head>
 <body>
+  <!-- Loading screen -->
+  <div id="loading-screen">
+    <div id="loading-title">LOWBALL BLITZ</div>
+    <div id="loading-subtitle">Loading models...</div>
+    <div id="loading-bar-bg"><div id="loading-bar-fill"></div></div>
+    <div id="loading-percent">0%</div>
+  </div>
+
   <!-- Lives HUD -->
   <div id="lives-display"></div>
 

@@ -100,6 +100,7 @@ export const HOMEOWNER = {
   DROP_INTERVAL: 0.4,   // seconds between panic point drops
   MODEL_PATH: 'assets/models/boomer.glb',
   MODEL_SCALE: 0.5,
+  MODEL_OFFSET_Y: 0.5,  // raise model above ground (Meshy origin is at center)
   COLORS: [
     0xff6347, // tomato
     0x4169e1, // royal blue
@@ -138,6 +139,9 @@ export const AGENT = {
   COLOR_HEAD: 0xffdab9,  // peach skin
   COLOR_SIGN: 0xff0000,  // red FOR SALE sign
   MIN_SPAWN_INTERVAL: 1, // fastest possible spawn rate
+  MODEL_PATH: 'assets/models/agent-boomer.glb',
+  MODEL_SCALE: 0.6,
+  MODEL_OFFSET_Y: 0.6,  // raise model above ground (Meshy origin is at center)
 };
 
 export const GAMEPLAY = {

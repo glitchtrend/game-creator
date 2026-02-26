@@ -83,16 +83,29 @@ export class Player {
     this.activeAction = next;
   }
 
-  throwEnvelope() {
+  /**
+   * @param {THREE.Vector3|null} targetPos - Optional target house position to aim at
+   */
+  throwEnvelope(targetPos) {
     if (this._throwCooldown > 0) return;
     if (gameState.gameOver) return;
 
     this._throwCooldown = ENVELOPE.COOLDOWN;
     gameState.totalThrown++;
 
-    // Create envelope flying forward (negative Z)
-    const dir = new THREE.Vector3(0, 0, -1);
-    const envelope = new Envelope(this.mesh.position, dir);
+    // Compute direction toward target or default forward
+    let dir;
+    if (targetPos) {
+      dir = new THREE.Vector3(
+        targetPos.x - this.mesh.position.x,
+        0,
+        targetPos.z - this.mesh.position.z
+      ).normalize();
+    } else {
+      dir = new THREE.Vector3(0, 0, -1);
+    }
+
+    const envelope = new Envelope(this.mesh.position, dir, targetPos);
     this.scene.add(envelope.mesh);
     this.envelopes.push(envelope);
 
@@ -193,10 +206,7 @@ export class Player {
       }
     }
 
-    // Throw on input
-    if (input.throwPressed) {
-      this.throwEnvelope();
-    }
+    // NOTE: Throw input is now handled in Game.animate() so it can find targets
 
     // Increase speed over time
     if (gameState.currentSpeed < GAMEPLAY.MAX_SPEED) {

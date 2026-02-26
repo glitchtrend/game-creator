@@ -1,13 +1,16 @@
 import { Game } from './core/Game.js';
 import { eventBus, Events } from './core/EventBus.js';
 import { gameState } from './core/GameState.js';
-import { IS_MOBILE } from './core/Constants.js';
 import { initAudioBridge } from './audio/AudioBridge.js';
+import { initPlayFun } from './playfun.js';
 
 const game = new Game();
 
 // --- Audio ---
 initAudioBridge();
+
+// --- Play.fun ---
+initPlayFun().catch(err => console.warn('Play.fun init failed:', err));
 
 // Init audio on first user interaction (browser autoplay policy)
 let audioInitDone = false;
@@ -45,8 +48,8 @@ if (muteBtn) {
   }
 }
 
-// On mobile, shift mute button up above joystick zone
-if (IS_MOBILE) {
+// On touch devices, shift mute button up above joystick zone
+if (HAS_TOUCH) {
   if (muteBtn) {
     muteBtn.style.bottom = 'max(140px, calc(3vh + 120px))';
   }
@@ -63,21 +66,18 @@ window.__EVENTS__ = Events;
 // by SpectacleSystem._onComboChanged via EventBus. No duplicate listener needed.
 
 // --- Mobile UI ---
-if (IS_MOBILE) {
+// Use touch capability detection (not user-agent) for consistent behavior
+const HAS_TOUCH = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+if (HAS_TOUCH) {
   const throwBtn = document.getElementById('throw-btn');
   const hints = document.getElementById('mobile-hints');
   if (throwBtn) throwBtn.style.display = 'flex';
   if (hints) hints.style.display = 'block';
 
-  // Throw button fires an envelope
-  if (throwBtn) {
-    throwBtn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      if (game.player) {
-        game.player.throwEnvelope();
-      }
-    }, { passive: false });
-  }
+  // Throw button triggers throw via InputSystem (so Game.js auto-targeting works)
+  // The throw button handler in InputSystem._setupThrowButton() already sets
+  // _throwJustPressed, which Game.animate() reads to call _findThrowTarget().
+  // No extra handler needed here — InputSystem owns the throw button.
 }
 
 // --- AI-readable game state snapshot ---

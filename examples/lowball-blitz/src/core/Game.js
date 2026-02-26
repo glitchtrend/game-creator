@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { GAME, CAMERA, COLORS, GAMEPLAY, STREET, ENVELOPE } from './Constants.js';
+import { GAME, CAMERA, COLORS, GAMEPLAY, STREET, ENVELOPE, CHARACTER, HOMEOWNER, AGENT } from './Constants.js';
 import { eventBus, Events } from './EventBus.js';
 import { gameState } from './GameState.js';
 import { InputSystem } from '../systems/InputSystem.js';
@@ -10,6 +10,7 @@ import { LevelBuilder } from '../level/LevelBuilder.js';
 import { Homeowner } from '../entities/Homeowner.js';
 import { PanicPoint } from '../entities/PanicPoint.js';
 import { Menu } from '../ui/Menu.js';
+import { preloadAll } from '../level/AssetLoader.js';
 
 export class Game {
   constructor() {
@@ -51,11 +52,38 @@ export class Game {
     // Resize
     window.addEventListener('resize', () => this.onResize());
 
-    // Auto-start game (no title screen -- Play.fun handles the chrome)
-    this.startGame();
-
-    // Start render loop (official Three.js pattern -- pauses when tab hidden)
+    // Start render loop immediately (shows sky while models load)
     this.renderer.setAnimationLoop(() => this.animate());
+
+    // Preload all GLB models with progress, then start game
+    const loadingBar = document.getElementById('loading-bar-fill');
+    const loadingPct = document.getElementById('loading-percent');
+    const loadingScreen = document.getElementById('loading-screen');
+
+    preloadAll(
+      [CHARACTER.path, HOMEOWNER.MODEL_PATH, AGENT.MODEL_PATH],
+      (loaded, total) => {
+        const pct = Math.round((loaded / total) * 100);
+        if (loadingBar) loadingBar.style.width = `${pct}%`;
+        if (loadingPct) loadingPct.textContent = `${pct}%`;
+      }
+    )
+      .then(() => {
+        console.log('All models preloaded');
+        this._dismissLoading(loadingScreen);
+        this.startGame();
+      })
+      .catch(() => {
+        console.warn('Some models failed to preload, using fallbacks');
+        this._dismissLoading(loadingScreen);
+        this.startGame();
+      });
+  }
+
+  _dismissLoading(el) {
+    if (!el) return;
+    el.classList.add('fade-out');
+    setTimeout(() => el.remove(), 600);
   }
 
   startGame() {
