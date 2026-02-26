@@ -20,7 +20,8 @@ Primitive cubes and spheres are fast to scaffold, but players can't tell a house
 | **2. Sketchfab** | sketchfab.com | `SKETCHFAB_TOKEN` for download | Huge catalog, varied quality |
 | **3. Poly Haven** | polyhaven.com | None | ~400 CC0 environment props |
 | **4. Poly.pizza** | poly.pizza | `POLY_PIZZA_API_KEY` | 10K+ low-poly CC-BY models |
-| **5. Procedural geometry** (fallback) | Code | N/A | BoxGeometry/SphereGeometry |
+| **5. Meshy AI** (generation) | meshy.ai | `MESHY_API_KEY` | Custom models from text/image, auto-rig, animate |
+| **6. Procedural geometry** (fallback) | Code | N/A | BoxGeometry/SphereGeometry |
 
 ### Pre-built Animated Characters (No Auth, Direct Download)
 

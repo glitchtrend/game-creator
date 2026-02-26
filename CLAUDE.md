@@ -28,6 +28,7 @@ skills/
   add-feature/SKILL.md     # Add feature following patterns
   add-assets/SKILL.md      # Replace shapes with pixel art sprites
   game-3d-assets/SKILL.md  # 3D model pipeline (GLB download, AssetLoader, animated characters)
+  meshyai/SKILL.md         # Meshy AI — generate 3D models from text/images, auto-rig, animate
   add-3d-assets/SKILL.md   # Replace 3D primitives with real GLB models
   add-audio/SKILL.md       # Add Strudel.cc audio
   record-promo/SKILL.md    # Record autonomous promo video (standalone command)
@@ -41,6 +42,7 @@ scripts/
   iterate-client.js        # Standalone Playwright iterate loop (action → screenshot → state → errors)
   example-actions.json     # Example action payloads for iterate-client.js
   find-3d-asset.mjs        # Search & download GLB models (Sketchfab, Poly Haven, Poly.pizza)
+  meshy-generate.mjs       # Generate 3D models with Meshy AI (text-to-3d, image-to-3d, rig, animate)
 3d-character-library/
   manifest.json            # Index of animated GLB characters with clip maps
   models/                  # Soldier.glb, Xbot.glb, RobotExpressive.glb, Fox.glb
