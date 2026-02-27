@@ -18,7 +18,7 @@ Register your game on [Play.fun](https://play.fun) (OpenGameProtocol), integrate
 
 ## Prerequisites
 
-- A deployed game with a public URL (run `/game-creator:make-game` first, or ensure your game is deployed to GitHub Pages / Vercel / etc.)
+- A deployed game with a public URL (run `/game-creator:make-game` first, or ensure your game is deployed to here.now / GitHub Pages / Vercel / etc.)
 - Node.js installed
 
 ## Instructions
@@ -75,16 +75,22 @@ If verification fails, offer the manual method as a fallback:
 
 Find the deployed game URL. Check in this order:
 
-1. Look for a GitHub Pages URL by running:
+1. Check for a here.now deploy state file:
+   ```bash
+   cat .herenow/state.json 2>/dev/null | jq -r '.publishes | to_entries[0].value.siteUrl // empty'
+   ```
+   If found, the URL is the `siteUrl` value (e.g., `https://<slug>.here.now/`)
+
+2. Look for a GitHub Pages URL by running:
    ```bash
    GITHUB_USER=$(gh api user --jq '.login' 2>/dev/null)
    REPO_NAME=$(basename $(git remote get-url origin 2>/dev/null) .git 2>/dev/null)
    ```
    If both resolve, the URL is `https://$GITHUB_USER.github.io/$REPO_NAME/`
 
-2. Check `vite.config.js` for a `base` path that hints at the deployment URL
+3. Check `vite.config.js` for a `base` path that hints at the deployment URL
 
-3. Ask the user for their game URL if it can't be determined
+4. Ask the user for their game URL if it can't be determined
 
 Verify the URL is accessible:
 
@@ -252,17 +258,21 @@ cd <project-dir> && npm run build
 
 If the build fails, fix the integration code and retry.
 
-Then redeploy:
+Then redeploy. Use `npm run deploy` if available, otherwise detect the platform:
 
+**here.now (default):**
 ```bash
-cd <project-dir> && npx gh-pages -d dist
+~/.agents/skills/here-now/scripts/publish.sh dist/
 ```
 
-Or whatever deploy method the project uses (`npm run deploy` if available).
+**GitHub Pages (if project uses it):**
+```bash
+npx gh-pages -d dist
+```
 
 ### Step 6: Confirm and share
 
-Wait ~30 seconds for deployment to propagate, then verify:
+Verify the deployment is live (here.now deploys are instant; GitHub Pages may take 1-2 minutes):
 
 ```bash
 curl -s -o /dev/null -w "%{http_code}" "$GAME_URL"

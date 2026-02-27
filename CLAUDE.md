@@ -19,10 +19,10 @@ skills/
   game-audio/SKILL.md      # Procedural audio (Strudel.cc BGM + SFX)
   game-qa/SKILL.md         # Playwright testing (gameplay, visual, perf)
   game-architecture/SKILL.md  # Reference architecture patterns
-  game-deploy/SKILL.md     # Deployment (GitHub Pages, Vercel, etc.)
+  game-deploy/SKILL.md     # Deployment (here.now default, GitHub Pages, Vercel, etc.)
   playdotfun/SKILL.md      # Play.fun monetization (git submodule → submodules/playdotfun)
   promo-video/SKILL.md     # Autonomous 50 FPS gameplay recording (Playwright + FFmpeg)
-  make-game/SKILL.md       # Full pipeline: scaffold → assets → design → promo video → audio → deploy → monetize (QA at every step)
+  make-game/SKILL.md       # Full pipeline: scaffold → assets → design → promo video → audio → deploy (here.now) → monetize (QA at every step)
   improve-game/SKILL.md    # Holistic audit + implement highest-impact improvements
   design-game/SKILL.md     # Visual design audit + improvements
   add-feature/SKILL.md     # Add feature following patterns
@@ -166,7 +166,7 @@ SFX fires on `BIRD_FLAP`, `SCORE_CHANGED`, `BIRD_DIED` via AudioBridge listeners
 
 The `/monetize-game` command (and Step 5 of `/make-game`) registers games on [Play.fun](https://play.fun) and integrates the browser SDK.
 
-**Flow**: Auth → Register game → Add SDK to `index.html` + create `src/playfun.js` → Rebuild → Redeploy → Share play.fun URL on Moltbook
+**Flow**: Auth → Register game → Add SDK to `index.html` + create `src/playfun.js` → Rebuild → Redeploy (here.now or GitHub Pages) → Share play.fun URL on Moltbook
 
 **Auth**: Uses `skills/playdotfun/scripts/playfun-auth.js` for credential management. Supports web callback (localhost:9876) and manual paste.
 

@@ -79,5 +79,5 @@ Tell the user:
 >
 > **What's next?**
 > - Add new gameplay features with `/game-creator:add-feature [description]`
-> - Deploy to the web — run `npm run build` then host the `dist/` folder on GitHub Pages, Vercel, Netlify, or itch.io
+> - Deploy to the web — run `npm run build && ~/.agents/skills/here-now/scripts/publish.sh dist/` for instant hosting, or use GitHub Pages, Vercel, Netlify, itch.io
 > - Keep iterating! Run `/design-game`, `/add-audio`, or `/review-game` again anytime after making changes.

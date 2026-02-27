@@ -15,9 +15,9 @@ Build a complete browser game from scratch, step by step. This command walks you
 3. Visual polish — gradients, particles, transitions, juice
 4. A 50 FPS promo video — autonomous gameplay capture, mobile portrait, ready for social media
 5. Chiptune music and retro sound effects (no audio files needed)
-6. Live deployment to GitHub Pages with a public URL
+6. Live deployment to here.now with an instant public URL
 7. Monetization via Play.fun — points tracking, leaderboards, wallet connect, and a play.fun URL to share on Moltbook
-8. Future changes auto-deploy on `git push`
+8. Redeploy with a single command (`npm run deploy`)
 
 **Quality assurance is built into every step** — each code-modifying step runs build verification, visual review via Playwright MCP, and autofixes any issues found.
 
@@ -235,7 +235,7 @@ Create all pipeline tasks upfront using `TaskCreate`:
 3. Add visual polish (particles, transitions, juice)
 4. Record promo video (autonomous 50 FPS capture)
 5. Add audio (BGM + SFX)
-6. Deploy to GitHub Pages
+6. Deploy to here.now
 7. Monetize with Play.fun (register on OpenGameProtocol, add SDK, redeploy)
 
 This gives the user full visibility into pipeline progress at all times. Quality assurance (build, runtime, visual review, autofix) is built into each step, not a separate task.
@@ -910,39 +910,34 @@ Launch a `Task` subagent with these instructions:
 > Your game now has music and sound effects! Click/tap once to activate audio, then you'll hear the music.
 > Note: Strudel is AGPL-3.0, so your project needs a compatible open source license.
 >
-> **Next up: deploy to the web.** I'll help you set up GitHub Pages so your game gets a public URL. Future changes auto-deploy when you push. Ready?
+> **Next up: deploy to the web.** I'll publish your game to here.now for an instant public URL. Ready?
 
 Mark task 5 as `completed`.
 
 **Wait for user confirmation before proceeding.**
 
-### Step 4: Deploy to GitHub Pages
+### Step 4: Deploy to here.now
 
 Mark task 6 as `in_progress`.
 
-Load the game-deploy skill. **This step stays in the main thread** because it requires interactive authentication and user back-and-forth.
+Load the game-deploy skill. **This step stays in the main thread** because it may require user back-and-forth for API key setup.
 
 #### 6a. Check prerequisites
 
-Run `gh auth status` to check if the GitHub CLI is installed and authenticated.
+Verify the here-now skill is installed:
 
-**If `gh` is not found**, tell the user:
-> You need the GitHub CLI to deploy. Install it with:
-> - **macOS**: `brew install gh`
-> - **Linux**: `sudo apt install gh` or see https://cli.github.com
->
-> Once installed, run `gh auth login` and follow the prompts, then tell me when you're ready.
+```bash
+ls ~/.agents/skills/here-now/scripts/publish.sh
+```
+
+**If not found**, tell the user:
+> The here-now skill is needed for deployment. Install it with:
+> ```
+> npx skills add heredotnow/skill --skill here-now -g -y
+> ```
+> Tell me when you're ready.
 
 **Wait for the user to confirm.**
-
-**If `gh` is not authenticated**, tell the user:
-> You need to log in to GitHub. Run this command and follow the prompts:
-> ```
-> gh auth login
-> ```
-> Choose "GitHub.com", "HTTPS", and authenticate via browser. Tell me when you're done.
-
-**Wait for the user to confirm.** Then re-run `gh auth status` to verify.
 
 #### 6b. Build the game
 
@@ -952,88 +947,104 @@ npm run build
 
 Verify `dist/` exists and contains `index.html` and assets. If the build fails, fix the errors before proceeding.
 
-#### 6c. Set up the Vite base path
+#### 6c. Verify the Vite base path
 
-Read `vite.config.js`. The `base` option must match the GitHub Pages URL pattern `/<repo-name>/`. If it's not set or wrong, update it:
+Read `vite.config.js`. For here.now, the `base` should be `'/'` (the default). If it's set to something else (e.g., a GitHub Pages subdirectory path), update it:
 
 ```js
 export default defineConfig({
-  base: '/<game-name>/',
+  base: '/',
   // ... rest of config
 });
 ```
 
 Rebuild after changing the base path.
 
-#### 6d. Create the GitHub repo and push
-
-Check if the project already has a git remote. If not:
+#### 6d. Publish to here.now
 
 ```bash
-git init
-git add .
-git commit -m "Initial commit"
-gh repo create <game-name> --public --source=. --push
+~/.agents/skills/here-now/scripts/publish.sh dist/
 ```
 
-If it already has a remote, just make sure all changes are committed and pushed.
+The script outputs the live URL immediately (e.g., `https://<slug>.here.now/`).
 
-#### 6e. Deploy with gh-pages
+Read and follow `publish_result.*` lines from script stderr. Save the slug for future updates.
+
+**If anonymous (no API key):** The publish expires in **24 hours and will be permanently deleted** unless the user claims it. The script returns a claim URL. **You MUST immediately tell the user:**
+
+> **ACTION REQUIRED — your game will be deleted in 24 hours!**
+> Visit your claim URL to create a free here.now account and keep your game online permanently.
+> The claim token is only shown once and cannot be recovered. Do this now before you forget!
+
+Then proceed to 6e to help them set up permanent hosting.
+
+**If authenticated:** The publish is permanent. Skip 6e.
+
+#### 6e. Set up permanent hosting
+
+**This step is strongly recommended for anonymous publishes.** Help the user create a here.now account so their game stays online:
+
+1. Ask for their email
+2. Send magic link:
+   ```bash
+   curl -sS https://here.now/api/auth/login -H "content-type: application/json" -d '{"email": "user@example.com"}'
+   ```
+3. Tell the user: "Check your inbox for a sign-in link from here.now. Click it, then copy your API key from the dashboard."
+4. Save the key:
+   ```bash
+   mkdir -p ~/.herenow && echo "<API_KEY>" > ~/.herenow/credentials && chmod 600 ~/.herenow/credentials
+   ```
+5. Re-publish to make it permanent:
+   ```bash
+   ~/.agents/skills/here-now/scripts/publish.sh dist/ --slug <slug>
+   ```
+
+#### 6f. Verify the deployment
 
 ```bash
-npm install -D gh-pages
-npx gh-pages -d dist
+curl -s -o /dev/null -w "%{http_code}" "https://<slug>.here.now/"
 ```
 
-This pushes the `dist/` folder to a `gh-pages` branch on GitHub.
+Should return 200 immediately (here.now deploys are instant).
 
-#### 6f. Enable GitHub Pages
-
-```bash
-GITHUB_USER=$(gh api user --jq '.login')
-gh api repos/$GITHUB_USER/<game-name>/pages -X POST --input - <<< '{"build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}'
-```
-
-If Pages is already enabled, this may return an error — that's fine, skip it.
-
-#### 6g. Get the live URL and verify
-
-```bash
-GITHUB_USER=$(gh api user --jq '.login')
-GAME_URL="https://$GITHUB_USER.github.io/<game-name>/"
-echo $GAME_URL
-```
-
-Wait ~30 seconds for the first deploy to propagate, then verify:
-
-```bash
-curl -s -o /dev/null -w "%{http_code}" "$GAME_URL"
-```
-
-If it returns 404, wait another minute and retry — GitHub Pages can take 1-2 minutes on first deploy.
-
-#### 6h. Add deploy script
+#### 6g. Add deploy script
 
 Add a `deploy` script to `package.json` so future deploys are one command:
 
 ```json
 {
   "scripts": {
-    "deploy": "npm run build && npx gh-pages -d dist"
+    "deploy": "npm run build && ~/.agents/skills/here-now/scripts/publish.sh dist/"
   }
 }
 ```
 
-**Tell the user:**
+**Tell the user (if authenticated):**
 > Your game is live!
 >
-> **URL**: `https://<username>.github.io/<game-name>/`
+> **URL**: `https://<slug>.here.now/`
 >
-> **How auto-deploy works**: Whenever you make changes, just run:
+> **Redeploy after changes**: Just run:
 > ```
 > npm run deploy
 > ```
-> Or if you're working with me, I'll commit your changes and run deploy for you.
+> Or if you're working with me, I'll rebuild and redeploy for you.
+>
+> **Next up: monetization.** I'll register your game on Play.fun (OpenGameProtocol), add the points SDK, and redeploy. Players earn rewards, you get a play.fun URL to share on Moltbook. Ready?
+
+**Tell the user (if anonymous — no API key):**
+> Your game is live!
+>
+> **URL**: `https://<slug>.here.now/`
+>
+> **IMPORTANT: Your game will be deleted in 24 hours unless you claim it!**
+> Visit your claim URL to create a free here.now account and keep your game online forever.
+> The claim token is only shown once — save it now!
+>
+> **Redeploy after changes**: Just run:
+> ```
+> npm run deploy
+> ```
 >
 > **Next up: monetization.** I'll register your game on Play.fun (OpenGameProtocol), add the points SDK, and redeploy. Players earn rewards, you get a play.fun URL to share on Moltbook. Ready?
 
@@ -1078,7 +1089,7 @@ If callback fails, offer manual method as fallback.
 
 #### 7b. Register the game on Play.fun
 
-Determine the deployed game URL from Step 6 (`https://<username>.github.io/<game-name>/`).
+Determine the deployed game URL from Step 6 (e.g., `https://<slug>.here.now/` or `https://<username>.github.io/<game-name>/`).
 
 Read `package.json` for the game name and description. Read `src/core/Constants.js` to determine reasonable anti-cheat limits based on the scoring system.
 
@@ -1184,10 +1195,12 @@ initPlayFun().catch(err => console.warn('Play.fun init failed:', err));
 #### 7d. Rebuild and redeploy
 
 ```bash
-cd <project-dir> && npm run build && npx gh-pages -d dist
+cd <project-dir> && npm run build && ~/.agents/skills/here-now/scripts/publish.sh dist/
 ```
 
-Wait ~30 seconds, then verify the deployment is live.
+If the project was deployed to GitHub Pages instead, use `npx gh-pages -d dist`.
+
+Verify the deployment is live (here.now deploys are instant; GitHub Pages may take 1-2 minutes).
 
 #### 7e. Tell the user
 
@@ -1214,7 +1227,7 @@ Tell the user:
 > - **Promo video** — 50 FPS gameplay footage in mobile portrait (`output/promo.mp4`)
 > - **Music and SFX** — chiptune background music and retro sound effects
 > - **Quality assured** — each step verified with build, runtime, and visual review
-> - **Live on the web** — deployed to GitHub Pages with a public URL
+> - **Live on the web** — deployed to here.now with an instant public URL
 > - **Monetized on Play.fun** — points tracking, leaderboards, and wallet connect
 >
 > **Share your play.fun URL on Moltbook** to reach 770K+ agents on the agent internet.
@@ -1227,3 +1240,4 @@ Tell the user:
 > - Launch a playcoin for your game (token rewards for players)
 > - Keep iterating! Run any step again: `/game-creator:design-game`, `/game-creator:add-audio`
 > - Redeploy after changes: `npm run deploy`
+> - Switch to GitHub Pages if you prefer git-based deploys: `/game-creator:game-deploy`

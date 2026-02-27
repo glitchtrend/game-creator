@@ -50,7 +50,7 @@ Step 1  Scaffold game from template                            ← code subagent
 Step 1.5 Add pixel art sprites (2D only)                       ← code subagent → QA subagent
 Step 2  Visual polish (particles, juice, transitions)          ← code subagent → QA subagent
 Step 3  Audio (Strudel.cc BGM + SFX)                           ← code subagent → QA subagent
-Step 4  Deploy to GitHub Pages                                 ← main thread (interactive auth)
+Step 4  Deploy to here.now                                     ← main thread (instant publish)
 Step 5  Monetize with Play.fun                                 ← main thread (interactive auth)
 ```
 
@@ -101,7 +101,7 @@ src/
 | `game-audio` | Procedural audio — Strudel.cc BGM patterns + Web Audio SFX |
 | `game-qa` | Playwright testing — gameplay, visual regression, performance, accessibility |
 | `game-architecture` | Reference architecture patterns for event-driven games |
-| `game-deploy` | Deployment — GitHub Pages, Vercel, Netlify, itch.io |
+| `game-deploy` | Deployment — here.now (default), GitHub Pages, Vercel, Netlify, itch.io |
 | `playdotfun` | Play.fun (OpenGameProtocol) — SDK, API, auth, leaderboards |
 | `fetch-tweet` | Fetch tweet content for tweet-to-game conversion |
 
@@ -128,7 +128,7 @@ All commands are prefixed with `game-creator:` when installed as a plugin (e.g.,
 | `game-creator` | Autonomous end-to-end pipeline with build/visual gates (no user confirmation between steps) | — (delegates to subagents) |
 | `game-reviewer` | Reviews codebases for architecture compliance, performance, and monetization readiness | `game-architecture` |
 | `game-qa-runner` | Runs Playwright test suites, diagnoses failures, fixes code, and re-runs until green | `game-qa`, `game-architecture` |
-| `game-deploy` | Deploys games to GitHub Pages, Vercel, or itch.io with pre/post validation | `game-deploy` |
+| `game-deploy` | Deploys games to here.now (default), GitHub Pages, Vercel, or itch.io with pre/post validation | `game-deploy` |
 
 ## Examples
 
