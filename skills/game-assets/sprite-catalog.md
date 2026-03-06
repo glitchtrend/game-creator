@@ -36,7 +36,7 @@ Frame indices are fixed and consistent across all characters:
 | 2 | angry | Take damage, lose life, opponent scores |
 | 3 | surprised | Power-up, special event, streak milestone |
 
-Not all characters have all 4 expressions — check `manifest.json` for available frames. If a character has only 3 frames (normal, happy, angry), don't reference frame 3.
+All characters have 4 frames. Some expressions may be fallbacks (copy of "normal") — check `manifest.json` `fallbacks` field for details. Use `--add-expression` to replace fallbacks with real photos later.
 
 ### Loading in Phaser
 
@@ -62,9 +62,9 @@ Physical descriptions for commonly-appearing tech figures. Use these to select s
 | Elon Musk | elon-musk | casual | 4 | Receding hairline + broad jaw |
 | Mark Zuckerberg | mark-zuckerberg | casual | 4 | Curly top + blank expression |
 | Satya Nadella | satya-nadella | suit | 4 | Bald + glasses |
-| Sundar Pichai | sundar-pichai | suit | 3 (normal, happy, angry) | Slim face + neat dark hair |
+| Sundar Pichai | sundar-pichai | suit | 4 (surprised is fallback) | Slim face + neat dark hair |
 | Jensen Huang | jensen-huang | leather-jacket | 4 | Black leather jacket |
-| Andrej Karpathy | andrej-karpathy | casual | 3 (normal, happy, angry) | Wavy hair + stubble |
+| Andrej Karpathy | andrej-karpathy | casual | 4 (surprised is fallback) | Wavy hair + stubble |
 
 ## Humanoid (Player, NPC, Warrior)
 
